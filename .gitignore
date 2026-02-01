@@ -1,6 +1,6 @@
 .env
 chromenv/
-.vemv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
