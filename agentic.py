@@ -41,7 +41,7 @@ class RAG:
         # batching
         embed_batch_size: int = 64,
         # сколько документов реально индексировать (чтобы быстро тестировать)
-        max_chunks_to_index: Optional[int] = 7000,
+        max_chunks_to_index: Optional[int] = 12896,
     ):
         self.data_file = data_file
         self.chunk_size = chunk_size
@@ -259,7 +259,7 @@ console.log(i); // ReferenceError: i is not defined
         persist_directory="./chroma_data",
         embed_model_name="intfloat/multilingual-e5-small",
         embed_batch_size=64,
-        max_chunks_to_index=7000,
+        max_chunks_to_index=12896,
     )
 
     # Агент-менеджер определяет тему (можно, но не обязательно)
