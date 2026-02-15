@@ -1,5 +1,4 @@
 import os
-from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 
 import torch
@@ -26,6 +25,23 @@ def ensure_api_key() -> str:
     if not api_key:
         raise ValueError("GROQ_API_KEY ERROR: переменная окружения GROQ_API_KEY не найдена.")
     return api_key
+
+
+def safe_route(text: str) -> str:
+    """
+    Приводит ответ менеджера к допустимому route: theory | code | both.
+    На случай, если LLM вернёт что-то лишнее.
+    """
+    t = (text or "").strip().lower()
+    if "both" in t or "оба" in t:
+        return "both"
+    if "theory" in t or "теор" in t or "explain" in t:
+        return "theory"
+    if "code" in t or "код" in t or "fix" in t:
+        return "code"
+
+    return "both"
+
 
 # -----------------------------
 # RAG
@@ -57,7 +73,7 @@ class RAG:
         self.dataset = self.get_data()
         self.chunks = self.chunk_dataset()
 
-        # ограничим количество чанков для индекса (если задано)
+        # ограничение кол-ва чанков для индекса
         if self.max_chunks_to_index is not None:
             self.chunks = self.chunks[: self.max_chunks_to_index]
 
@@ -152,11 +168,10 @@ class RAG:
         return embeddings
 
     def add_documents_to_db(self, chunks: List[Dict[str, Any]], embeddings: Tensor) -> None:
-        embeddings_np = embeddings.numpy()  # Chroma требует numpy
+        embeddings_np = embeddings.numpy()
         documents = [c["text"] for c in chunks]
         ids = [str(i) for i in range(len(documents))]  # простые ids 0..N-1
 
-        # (опционально) можно добавить метаданные
         metadatas = [{"original_doc_id": c["original_doc_id"], "chunk_id": c["id"]} for c in chunks]
 
         self.collection.add(
@@ -191,14 +206,13 @@ class RAG:
             n_results=n_results,
         )
 
-        # results["documents"] имеет форму [[doc1, doc2, doc3]] для одного запроса
         docs = results["documents"][0]
         return docs
 
     @staticmethod
     def format_context(docs: List[str]) -> str:
-        # делаем читаемый “эталон”
         return "\n\n---\n\n".join(docs)
+
 
 # -----------------------------
 # Agent
@@ -237,7 +251,8 @@ ROLE: Ты {self.name}.
 
         response = self.llm.invoke(prompt)
         return response.content
-    
+
+
 # -----------------------------
 # Main
 # -----------------------------
@@ -251,7 +266,7 @@ for (let i = 0; i < 5; i++) {
 console.log(i); // ReferenceError: i is not defined
 """.strip()
 
-    # Инициализируем RAG (эмбеддинги пойдут на GPU, если есть CUDA)
+    # инициализируем RAG (эмбеддинги пойдут на GPU, если есть CUDA)
     rag = RAG(
         data_file="./mdn_web_javascript-7.csv",
         chunk_size=500,
@@ -262,18 +277,19 @@ console.log(i); // ReferenceError: i is not defined
         max_chunks_to_index=12896,
     )
 
-    # Агент-менеджер определяет тему (можно, но не обязательно)
+    # менеджер
     manager = Agent(
         "Менеджер",
-        "Определи, к какой теме JavaScript относится запрос. Верни только короткое название темы, без пояснений.",
+        "Классифицируй запрос ученика. Верни строго одно слово: theory | code | both. Без пояснений.",
         api_key,
         model="groq/compound-mini",
-        temperature=0.2,
+        temperature=0.0,
     )
-    theme = manager.execute(query)
-    print(f"\n[theme] {theme}\n")
+    route_raw = manager.execute(query)
+    route = safe_route(route_raw)
+    print(f"\n[route] {route} (raw: {route_raw.strip()})\n")
 
-    # Достаём контекст (лучше искать по исходному query, а не по теме — тема часто ухудшает retrieval)
+    # контекст
     docs = rag.vectorize_and_search(query, n_results=3)
     context_text = rag.format_context(docs)
 
@@ -281,29 +297,34 @@ console.log(i); // ReferenceError: i is not defined
     for i, d in enumerate(docs, 1):
         print(f"\n--- DOC {i} ---\n{d[:800]}{'...' if len(d) > 800 else ''}")
 
-    # Учитель: объяснение
-    teacher = Agent(
-        "учитель",
-        "Проанализируй запрос ученика и объясни, почему так происходит. НЕ исправляй код. Объясняй простыми словами.",
-        api_key,
-        model="openai/gpt-oss-20b",
-        temperature=0.4,
-    )
-    teacher_output = teacher.execute(query, context_text)
-    print(f"\n[teacher]\n{teacher_output}\n")
+    teacher_output = ""
+    code = ""
 
-    # Программист: минимально исправить (по сути тут “исправление” — убрать обращение к i вне блока или поменять на var)
-    coder = Agent(
-        "Программист",
-        "Найди код в запросе и минимально исправь его так, чтобы он работал без ошибки. Верни ТОЛЬКО исправленный код, без текста.",
-        api_key,
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
-        temperature=0.2,
-    )
-    code = coder.execute(query, context_text)
-    print(f"\n[coder]\n{code}\n")
+    # учитель
+    if route in ("theory", "both"):
+        teacher = Agent(
+            "учитель",
+            "Проанализируй запрос ученика и объясни, почему так происходит. НЕ исправляй код. Объясняй простыми словами.",
+            api_key,
+            model="openai/gpt-oss-20b",
+            temperature=0.4,
+        )
+        teacher_output = teacher.execute(query, context_text)
+        print(f"\n[teacher]\n{teacher_output}\n")
 
-    # Редактор: проверка согласованности
+    # программист
+    if route in ("code", "both"):
+        coder = Agent(
+            "Программист",
+            "Найди код в запросе и минимально исправь его так, чтобы он работал без ошибки. Верни ТОЛЬКО исправленный код, без текста.",
+            api_key,
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            temperature=0.2,
+        )
+        code = coder.execute(query, context_text)
+        print(f"\n[coder]\n{code}\n")
+
+    # валидатор
     validator = Agent(
         "Редактор",
         "Проверь, нет ли фактических ошибок и соотносится ли объяснение с кодом. "
@@ -313,6 +334,7 @@ console.log(i); // ReferenceError: i is not defined
         model="llama-3.3-70b-versatile",
         temperature=0.2,
     )
+
     result = validator.execute(
         query,
         context=f"EXPLANATION DRAFT:\n{teacher_output}\n\nCODE DRAFT:\n{code}\n\nREFERENCE CONTEXT:\n{context_text}",
@@ -320,6 +342,7 @@ console.log(i); // ReferenceError: i is not defined
     print(f"\n[validator]\n{result}\n")
 
     answers = {
+        "route": route,
         "explanation": teacher_output,
         "code": code,
         "validated": result,
