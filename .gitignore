@@ -1,2 +1,10 @@
 .env
 chromenv/
+.deepeval/
+__pycache__/
+agents.py
+checking.py
+deepeval.log
+short_test_cases.txt
+test_cases.txt
+tests.py
