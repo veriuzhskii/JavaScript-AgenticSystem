@@ -170,17 +170,30 @@ class RAG:
     def add_documents_to_db(self, chunks: List[Dict[str, Any]], embeddings: Tensor) -> None:
         embeddings_np = embeddings.numpy()
         documents = [c["text"] for c in chunks]
-        ids = [str(i) for i in range(len(documents))]  # простые ids 0..N-1
-
         metadatas = [{"original_doc_id": c["original_doc_id"], "chunk_id": c["id"]} for c in chunks]
 
-        self.collection.add(
-            documents=documents,
-            embeddings=embeddings_np,
-            ids=ids,
-            metadatas=metadatas,
-        )
-        print(f"[RAG] Indexed {len(documents)} docs into Chroma")
+        # Chroma имеет лимит на размер batch 
+        max_batch = 5000
+        total = len(documents)
+
+        for start in range(0, total, max_batch):
+            end = min(start + max_batch, total)
+
+            batch_docs = documents[start:end]
+            batch_embs = embeddings_np[start:end]
+            batch_metas = metadatas[start:end]
+            batch_ids = [str(i) for i in range(start, end)]  # уникальные ids
+
+            self.collection.add(
+                documents=batch_docs,
+                embeddings=batch_embs,
+                ids=batch_ids,
+                metadatas=batch_metas,
+            )
+
+            print(f"[RAG] Indexed {end}/{total} docs into Chroma (batch {start}-{end})")
+
+        print(f"[RAG] Indexed total {total} docs into Chroma")
 
     def vectorize_and_search(self, query: str, n_results: int = 3) -> List[str]:
         # E5: "query:" для запросов
