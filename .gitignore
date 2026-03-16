@@ -1,8 +1,9 @@
 .env
 chromenv/
-.venv/
+venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 chroma_data/
+history/
