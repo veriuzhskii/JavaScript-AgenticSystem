@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Learn JavaScript</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/static/css/style.css?v=4" />
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button id="newChatBtn" class="new-chat-btn">+ Новый чат</button>
+      </div>
+
+      <div id="chatList" class="chat-list"></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="sidebarToggle" class="icon-btn" title="Скрыть/показать панель">☰</button>
+          <span id="chatTitle" class="chat-title-header">Новый чат</span>
+        </div>
+
+        <button id="themeToggle" class="icon-btn" title="Сменить тему">🌙</button>
+      </header>
+
+      <section class="chat-area">
+        <div class="chat-inner">
+          <div id="welcomeScreen" class="welcome-screen">
+            <h1>Чем помочь?</h1>
+            <p>Задайте вопрос по JavaScript, попросите объяснить код или помочь с задачей.</p>
+          </div>
+
+          <div id="messages" class="messages"></div>
+        </div>
+      </section>
+
+      <footer class="input-area">
+        <form id="inputForm" class="input-form">
+          <input
+            id="queryInput"
+            type="text"
+            placeholder="Спросите что-нибудь..."
+            autocomplete="off"
+          />
+          <button type="submit" id="sendBtn">➤</button>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <div id="renameModal" class="modal-overlay hidden">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="renameModalTitle">
+      <div class="modal-header">
+        <h2 id="renameModalTitle">Переименовать чат</h2>
+        <button id="renameCloseBtn" class="modal-close-btn" type="button" aria-label="Закрыть">✕</button>
+      </div>
+
+      <form id="renameForm" class="modal-form">
+        <input
+          id="renameInput"
+          class="modal-input"
+          type="text"
+          placeholder="Введите название чата"
+          maxlength="120"
+          autocomplete="off"
+        />
+
+        <div class="modal-actions">
+          <button type="button" id="renameCancelBtn" class="modal-btn secondary">Отмена</button>
+          <button type="submit" class="modal-btn primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="chatContextMenu" class="chat-context-menu hidden">
+    <button id="contextRenameBtn" class="chat-context-menu-item">
+      Переименовать
+    </button>
+    <button id="contextDeleteBtn" class="chat-context-menu-item delete">
+      Удалить
+    </button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/static/js/script.js?v=4" defer></script>
+</body>
+</html>
