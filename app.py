@@ -16,6 +16,7 @@ load_dotenv()
 
 app = FastAPI(title="JavaScript Chat")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+vercel_app = app
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
