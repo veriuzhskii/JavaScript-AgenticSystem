@@ -1,0 +1,9 @@
+[project]
+name = "javascript-learning-system"
+version = "0.1.0"
+requires-python = "==3.13.5"
+
+[tool.uv]
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'"
+]
