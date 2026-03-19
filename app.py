@@ -12,7 +12,8 @@ from pydantic import BaseModel
 
 from model import MultiAgentSystem
 
-load_dotenv()
+if os.getenv('VERCEL_ENV') is None:
+    load_dotenv()
 
 app = FastAPI(title="JavaScript Chat")
 app.mount("/static", StaticFiles(directory="static"), name="static")
