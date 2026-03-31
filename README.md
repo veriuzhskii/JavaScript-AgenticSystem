@@ -49,5 +49,22 @@ Open the link provided in the terminal to access the chat interface.
 
 - **Error: "ModuleNotFoundError"**  
   Ensure all dependencies are installed by running `pip install -r requirements.txt`.
+
 - **Error: "Invalid API Key"**  
   Double-check your `.env` file and ensure the `GROQ_API_KEY` is correct.
+
+- **To invoke the onboarding quiz again**
+  
+  Open DevTools → Console and run:
+  ```
+  localStorage.removeItem("js_onboarding_state");
+  location.reload();
+  ```
+
+- ⚠️ **Full reset** (clears everything)
+
+  **WARNING**! this removes **ALL** stored data, including, including: chats, theme, etc.
+  ```
+  localStorage.clear();
+  location.reload();
+  ```
