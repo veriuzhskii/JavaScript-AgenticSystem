@@ -4,65 +4,61 @@
    Потом они используются через var(--имя-переменной).
 ========================================================= */
 :root {
-  /* Фон всей страницы */
-  --bg: #e5e5ee;
+  --accent: rgb(181, 140, 219);
+  --accent-hover: rgb(166, 124, 206);
+  --accent-soft: rgba(181, 140, 219, 0.14);
+}
 
-  /* Фон левого сайдбара */
-  --sidebar-bg: #ececf1;
 
-  /* Фон панелей/выпадающих окон */
-  --panel: #d3cee4;
+html[data-theme="light"] {
+  /* Основной фон */
+  --bg: #f7f7fb;
 
-  /* Основной цвет текста */
+  /* Sidebar */
+  --sidebar-bg: #f1f2f7;
+
+  /* Панели (модалки, меню) */
+  --panel: #ffffff;
+
+  /* Текст */
   --text: #111111;
+  --muted: #6b7280;
 
-  /* Более приглушенный цвет текста */
-  --muted: #716b80;
+  /* Границы */
+  --border: #e5e7eb;
 
-  /* Цвет границ */
-  --border: #ffffff;
+  /* Hover */
+  --hover: #f0ebff;
 
-  /* Цвет при наведении */
-  --hover: #d2c5eb;
-
-  /* Фон сообщения ассистента */
+  /* Сообщения */
   --assistant: #ffffff;
-
-  /* Фон сообщения пользователя */
   --user: #746cb3;
-
-  /* Цвет текста в сообщении пользователя */
   --user-text: #ffffff;
 
-  /* Фон поля ввода */
+  /* Input */
   --input-bg: #ffffff;
 
   /* Тень */
-  --shadow: rgba(255, 255, 255, 0.1);
+  --shadow: rgba(0, 0, 0, 0.06);
 
-  /* Цвет опасных действий, например delete */
+  /* Danger */
   --danger: #dc2626;
 
-  /* Затемнение под модальным окном */
+  /* Overlay */
   --overlay: rgba(17, 24, 39, 0.45);
 
-  /* Цвет ползунка скролла в области чата */
-  --main-scrollbar-thumb: rgba(17, 17, 17, 0.28);
+  /* Scrollbars */
+  --main-scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --main-scrollbar-thumb-hover: rgba(0, 0, 0, 0.32);
 
-  /* Цвет ползунка при наведении */
-  --main-scrollbar-thumb-hover: rgba(17, 17, 17, 0.42);
+  --sidebar-scrollbar-thumb: rgba(0, 0, 0, 0.14);
+  --sidebar-scrollbar-thumb-hover: rgba(0, 0, 0, 0.26);
 
-  /* Цвет скролла в сайдбаре */
-  --sidebar-scrollbar-thumb: rgba(17, 17, 17, 0.22);
-
-  /* Цвет скролла в сайдбаре при наведении */
-  --sidebar-scrollbar-thumb-hover: rgba(17, 17, 17, 0.36);
+  --accent: rgb(181, 140, 219);
+  --accent-hover: rgb(166, 124, 206);
+  --accent-soft: rgba(181, 140, 219, 0.14);
 }
 
-/* =========================================================
-   ПЕРЕОПРЕДЕЛЕНИЕ ПЕРЕМЕННЫХ ДЛЯ ТЕМНОЙ ТЕМЫ
-   Когда на html стоит data-theme="dark", используются эти цвета.
-========================================================= */
 html[data-theme="dark"] {
   --bg: #212121;
   --sidebar-bg: #171717;
@@ -83,14 +79,16 @@ html[data-theme="dark"] {
   --main-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
   --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.16);
   --sidebar-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+
+  --accent: rgb(181, 140, 219);
+  --accent-hover: rgb(194, 156, 227);
+  --accent-soft: rgba(181, 140, 219, 0.14);
 }
 
-/* Сообщаем браузеру, что это темная тема */
 html[data-theme="dark"] {
   color-scheme: dark;
 }
 
-/* Сообщаем браузеру, что это светлая тема */
 html[data-theme="light"] {
   color-scheme: light;
 }
