@@ -61,9 +61,11 @@ Open the link provided in the terminal to access the chat interface.
   location.reload();
   ```
 
-- ⚠️ **Full reset** (clears everything)
+- ⚠️ **FULL RESET**
 
   **WARNING**! this removes **ALL** stored data, including, including: chats, theme, etc.
+
+  Open DevTools → Console and run:
   ```
   localStorage.clear();
   location.reload();
