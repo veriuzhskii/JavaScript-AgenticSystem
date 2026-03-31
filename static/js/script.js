@@ -1,3 +1,5 @@
+import { icons } from "./icons.js";
+
 let chats = JSON.parse(localStorage.getItem("chats")) || {};
 let currentChatId = localStorage.getItem("currentChatId");
 let renameTargetChatId = null;
@@ -8,6 +10,7 @@ const messagesDiv = document.getElementById("messages");
 const chatTitleEl = document.getElementById("chatTitle");
 const form = document.getElementById("inputForm");
 const input = document.getElementById("queryInput");
+const sendBtn = document.getElementById("sendBtn");
 const themeBtn = document.getElementById("themeToggle");
 const sidebar = document.getElementById("sidebar");
 const sidebarToggle = document.getElementById("sidebarToggle");
@@ -30,13 +33,29 @@ if (Object.keys(chats).length === 0) {
   currentChatId = Object.keys(chats)[0];
 }
 
+function setupIcons() {
+  sidebarToggle.innerHTML = icons.menu;
+  sendBtn.innerHTML = icons.send;
+
+  contextRenameBtn.innerHTML = `
+    ${icons.rename}
+    <span>Переименовать</span>
+  `;
+
+  contextDeleteBtn.innerHTML = `
+    ${icons.delete}
+    <span>Удалить</span>
+  `;
+}
+
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   localStorage.setItem("theme", theme);
-  themeBtn.textContent = theme === "dark" ? "☀️" : "🌙";
+  themeBtn.innerHTML = theme === "dark" ? icons.sun : icons.moon;
 }
 
 applyTheme(localStorage.getItem("theme") || "dark");
+setupIcons();
 
 themeBtn.addEventListener("click", () => {
   const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -266,8 +285,9 @@ function renderChatList() {
 
     const menuBtn = document.createElement("button");
     menuBtn.className = "chat-menu-btn";
-    menuBtn.innerHTML = "⋯";
+    menuBtn.innerHTML = icons.more;
     menuBtn.title = "Опции";
+    menuBtn.type = "button";
 
     menuBtn.onclick = (e) => {
       e.stopPropagation();
