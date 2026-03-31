@@ -5,6 +5,14 @@ let currentChatId = localStorage.getItem("currentChatId");
 let renameTargetChatId = null;
 let activeMenuChatId = null;
 
+const ONBOARDING_STORAGE_KEY = "js_onboarding_state";
+
+let onboardingState = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY)) || {
+  completed: false,
+  level: null,
+  topics: []
+};
+
 const chatListEl = document.getElementById("chatList");
 const messagesDiv = document.getElementById("messages");
 const chatTitleEl = document.getElementById("chatTitle");
@@ -26,6 +34,13 @@ const renameCancelBtn = document.getElementById("renameCancelBtn");
 const contextMenu = document.getElementById("chatContextMenu");
 const contextRenameBtn = document.getElementById("contextRenameBtn");
 const contextDeleteBtn = document.getElementById("contextDeleteBtn");
+
+const surveyModal = document.getElementById("surveyModal");
+const levelBeginnerBtn = document.getElementById("levelBeginnerBtn");
+const levelReturningBtn = document.getElementById("levelReturningBtn");
+const topicsSection = document.getElementById("topicsSection");
+const topicsGrid = document.getElementById("topicsGrid");
+const surveyContinueBtn = document.getElementById("surveyContinueBtn");
 
 if (Object.keys(chats).length === 0) {
   createNewChat();
@@ -69,7 +84,9 @@ sidebarToggle.addEventListener("click", () => {
 
 newChatBtn.addEventListener("click", () => {
   createNewChat();
-  input.focus();
+  if (canUseChat()) {
+    input.focus();
+  }
 });
 
 document.addEventListener("click", (e) => {
@@ -135,6 +152,11 @@ contextDeleteBtn.addEventListener("click", () => {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  if (!canUseChat()) {
+    openSurveyModal();
+    return;
+  }
+
   const text = input.value.trim();
   if (!text) return;
 
@@ -176,6 +198,99 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
+/* =========================
+   ONBOARDING / SURVEY
+========================= */
+levelBeginnerBtn.addEventListener("click", () => {
+  onboardingState.level = "beginner";
+  updateSurveyUI();
+});
+
+levelReturningBtn.addEventListener("click", () => {
+  onboardingState.level = "returning";
+  updateSurveyUI();
+});
+
+topicsGrid.addEventListener("click", (e) => {
+  const chip = e.target.closest(".topic-chip");
+  if (!chip) return;
+
+  const topic = chip.dataset.topic;
+  if (!topic) return;
+
+  const exists = onboardingState.topics.includes(topic);
+
+  if (exists) {
+    onboardingState.topics = onboardingState.topics.filter((item) => item !== topic);
+  } else {
+    onboardingState.topics.push(topic);
+  }
+
+  updateSurveyUI();
+});
+
+surveyContinueBtn.addEventListener("click", () => {
+  if (!onboardingState.level) return;
+
+  onboardingState.completed = true;
+  saveOnboardingState();
+  closeSurveyModal();
+  updateChatAvailability();
+  input.focus();
+});
+
+function canUseChat() {
+  return Boolean(onboardingState.completed);
+}
+
+function saveOnboardingState() {
+  localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(onboardingState));
+}
+
+function openSurveyModal() {
+  surveyModal.classList.remove("hidden");
+  updateSurveyUI();
+}
+
+function closeSurveyModal() {
+  surveyModal.classList.add("hidden");
+}
+
+function updateSurveyUI() {
+  const isBeginner = onboardingState.level === "beginner";
+  const isReturning = onboardingState.level === "returning";
+
+  levelBeginnerBtn.classList.toggle("active", isBeginner);
+  levelReturningBtn.classList.toggle("active", isReturning);
+
+  topicsSection.classList.toggle("hidden", !isReturning);
+
+  const topicButtons = topicsGrid.querySelectorAll(".topic-chip");
+  topicButtons.forEach((btn) => {
+    const topic = btn.dataset.topic;
+    btn.classList.toggle("active", onboardingState.topics.includes(topic));
+  });
+
+  surveyContinueBtn.disabled = !onboardingState.level;
+}
+
+function updateChatAvailability() {
+  const locked = !canUseChat();
+
+  input.disabled = locked;
+  sendBtn.disabled = locked;
+  form.classList.toggle("is-locked", locked);
+
+  if (locked) {
+    input.placeholder = "Сначала пройдите опрос перед началом работы";
+  } else {
+    input.placeholder = "Спросите что-нибудь...";
+  }
+}
+
+/* =========================
+   CHAT CORE
+========================= */
 function createNewChat() {
   const id = Date.now().toString();
   chats[id] = {
@@ -230,8 +345,8 @@ function showContextMenu(chatId, buttonEl) {
   activeMenuChatId = chatId;
 
   const rect = buttonEl.getBoundingClientRect();
-  const menuWidth = 180;
-  const menuHeight = 96;
+  const menuWidth = 200;
+  const menuHeight = 116;
   const gap = 8;
 
   let left = rect.right + gap;
@@ -341,6 +456,7 @@ function render() {
   renderChatList();
   chatTitleEl.textContent = chats[currentChatId].title;
   renderMessages();
+  updateChatAvailability();
 }
 
 function save() {
@@ -348,4 +464,13 @@ function save() {
   localStorage.setItem("currentChatId", currentChatId);
 }
 
+/* =========================
+   INIT
+========================= */
 render();
+updateSurveyUI();
+updateChatAvailability();
+
+if (!canUseChat()) {
+  openSurveyModal();
+}
