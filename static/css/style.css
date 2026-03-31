@@ -1,7 +1,5 @@
 /* =========================================================
    ГЛОБАЛЬНЫЕ CSS-ПЕРЕМЕННЫЕ ДЛЯ СВЕТЛОЙ ТЕМЫ
-   Здесь задаются основные цвета и тени интерфейса.
-   Потом они используются через var(--имя-переменной).
 ========================================================= */
 :root {
   --accent: rgb(181, 140, 219);
@@ -96,15 +94,10 @@ html[data-theme="light"] {
 /* =========================================================
    БАЗОВЫЕ НАСТРОЙКИ
 ========================================================= */
-
-/* Чтобы padding и border не ломали размеры элементов */
 * {
   box-sizing: border-box;
 }
 
-/* Убираем стандартные отступы браузера.
-   Фиксируем размер html/body и отключаем общий скролл страницы.
-   Важно: скролл будет жить внутри chat-area, а не у body. */
 html,
 body {
   margin: 0;
@@ -116,20 +109,17 @@ body {
   color: var(--text);
 }
 
-/* Кнопки и инпуты наследуют шрифт от body */
 button,
 input {
   font: inherit;
 }
 
-/* Универсальный класс для скрытия элементов */
 .hidden {
   display: none !important;
 }
 
 /* =========================================================
-   ОСНОВНОЙ КОНТЕЙНЕР ПРИЛОЖЕНИЯ
-   Делит экран на sidebar слева и main-content справа.
+   ОСНОВНОЙ КОНТЕЙНЕР
 ========================================================= */
 .app-container {
   display: flex;
@@ -142,8 +132,6 @@ input {
 /* =========================================================
    SIDEBAR
 ========================================================= */
-
-/* Левая панель с чатами */
 .sidebar {
   width: 260px;
   min-width: 260px;
@@ -152,17 +140,11 @@ input {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-
-  /* Слева отступ есть, справа убран — это помогает скроллу быть почти у края */
   padding: 12px 0 12px 12px;
-
   overflow: hidden;
-
-  /* Плавное скрытие/появление сайдбара */
   transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease;
 }
 
-/* Состояние скрытого сайдбара */
 .sidebar.collapsed {
   width: 0;
   min-width: 0;
@@ -171,16 +153,12 @@ input {
   border-right: none;
 }
 
-/* Верхняя часть сайдбара с кнопкой "Новый чат" */
 .sidebar-header {
   margin-bottom: 12px;
   flex-shrink: 0;
-
-  /* Правый отступ нужен, чтобы кнопка не прилипала к краю */
   padding-right: 12px;
 }
 
-/* Кнопка создания нового чата */
 .new-chat-btn {
   width: 100%;
   border: 1px solid var(--border);
@@ -197,8 +175,7 @@ input {
 }
 
 /* =========================================================
-   СПИСОК ЧАТОВ В SIDEBAR
-   Здесь находится отдельный скролл сайдбара.
+   СПИСОК ЧАТОВ
 ========================================================= */
 .chat-list {
   flex: 1;
@@ -206,20 +183,13 @@ input {
   display: flex;
   flex-direction: column;
   gap: 6px;
-
-  /* Скролл только по вертикали */
   overflow-y: auto;
   overflow-x: hidden;
-
-  /* Небольшой отступ справа, чтобы карточки не лезли под скролл */
   padding: 0 6px 0 0;
-
-  /* Firefox-стилизация скролла */
   scrollbar-width: thin;
   scrollbar-color: var(--sidebar-scrollbar-thumb) transparent;
 }
 
-/* Скролл сайдбара для Chromium-браузеров */
 .chat-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -237,17 +207,13 @@ input {
   background: var(--sidebar-scrollbar-thumb-hover);
 }
 
-/* Одна строка чата в списке */
 .chat-list-item {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-
-  /* Небольшой внешний отступ справа, чтобы карточка не упиралась в скролл */
   margin-right: 6px;
-
   padding: 10px 12px;
   border-radius: 10px;
   cursor: pointer;
@@ -263,7 +229,6 @@ input {
   background: var(--hover);
 }
 
-/* Название чата */
 .chat-list-title {
   flex: 1;
   min-width: 0;
@@ -273,7 +238,6 @@ input {
   font-size: 14px;
 }
 
-/* Кнопка ... у чата */
 .chat-menu-btn {
   border: none;
   background: transparent;
@@ -284,15 +248,11 @@ input {
   height: 28px;
   font-size: 18px;
   line-height: 1;
-
-  /* По умолчанию скрыта, появляется при hover */
   opacity: 0;
-
   transition: opacity 0.2s ease, background 0.2s ease;
   flex-shrink: 0;
 }
 
-/* Показываем кнопку ... при наведении на чат */
 .chat-list-item:hover .chat-menu-btn,
 .chat-list-item.active .chat-menu-btn {
   opacity: 1;
@@ -303,8 +263,7 @@ input {
 }
 
 /* =========================================================
-   КОНТЕКСТНОЕ МЕНЮ ЧАТА
-   Это отдельное всплывающее окно для Rename/Delete.
+   КОНТЕКСТНОЕ МЕНЮ
 ========================================================= */
 .chat-context-menu {
   position: fixed;
@@ -319,7 +278,6 @@ input {
   z-index: 2000;
 }
 
-/* Элемент внутри контекстного меню */
 .chat-context-menu-item {
   width: 100%;
   border: none;
@@ -329,13 +287,22 @@ input {
   padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .chat-context-menu-item:hover {
   background: var(--hover);
 }
 
-/* Опасный пункт меню — удалить */
 .chat-context-menu-item.delete {
   color: var(--danger);
 }
@@ -344,9 +311,12 @@ input {
   background: rgba(220, 38, 38, 0.08);
 }
 
+.chat-context-menu-item svg {
+  flex-shrink: 0;
+}
+
 /* =========================================================
    MAIN CONTENT
-   Правая часть приложения: topbar + чат + input
 ========================================================= */
 .main-content {
   flex: 1;
@@ -357,7 +327,6 @@ input {
   overflow: hidden;
 }
 
-/* Верхняя панель */
 .topbar {
   height: 56px;
   min-height: 56px;
@@ -370,7 +339,6 @@ input {
   background: var(--bg);
 }
 
-/* Левая часть topbar: toggle + title */
 .topbar-left {
   display: flex;
   align-items: center;
@@ -378,7 +346,6 @@ input {
   min-width: 0;
 }
 
-/* Заголовок текущего чата */
 .chat-title-header {
   font-size: 15px;
   font-weight: 600;
@@ -388,7 +355,6 @@ input {
   max-width: 60vw;
 }
 
-/* Универсальная иконка-кнопка */
 .icon-btn {
   border: none;
   background: transparent;
@@ -401,30 +367,28 @@ input {
   flex-shrink: 0;
 }
 
+.icon-btn svg {
+  display: block;
+  margin: 0 auto;
+}
+
 .icon-btn:hover {
   background: var(--hover);
 }
 
 /* =========================================================
    ОБЛАСТЬ ЧАТА
-   ВАЖНО: скролл находится именно здесь, а не у body.
 ========================================================= */
 .chat-area {
   flex: 1;
   min-height: 0;
-
-  /* Только эта область скроллится */
   overflow-y: auto;
   overflow-x: hidden;
-
   padding: 0 24px;
-
-  /* Firefox-стилизация скролла */
   scrollbar-width: thin;
   scrollbar-color: var(--main-scrollbar-thumb) transparent;
 }
 
-/* Скролл чата для Chromium */
 .chat-area::-webkit-scrollbar {
   width: 10px;
 }
@@ -442,7 +406,6 @@ input {
   background: var(--main-scrollbar-thumb-hover);
 }
 
-/* Центральная колонка чата */
 .chat-inner {
   width: 100%;
   max-width: 760px;
@@ -454,10 +417,8 @@ input {
 
 /* =========================================================
    WELCOME SCREEN
-   Показывается, если сообщений в чате еще нет.
 ========================================================= */
 .welcome-screen {
-  /* Высота вычисляется как экран - topbar - input-area */
   min-height: calc(100vh - 56px - 96px);
   display: flex;
   align-items: center;
@@ -484,32 +445,26 @@ input {
 /* =========================================================
    СООБЩЕНИЯ
 ========================================================= */
-
-/* Контейнер со всеми сообщениями */
 .messages {
   display: flex;
   flex-direction: column;
   padding: 24px 0 12px;
 }
 
-/* Одна строка сообщения */
 .message-row {
   display: flex;
   width: 100%;
   margin-bottom: 18px;
 }
 
-/* Сообщения пользователя выравниваются вправо */
 .user-row {
   justify-content: flex-end;
 }
 
-/* Сообщения ассистента выравниваются влево */
 .bot-row {
   justify-content: flex-start;
 }
 
-/* Базовый стиль пузыря сообщения */
 .message {
   width: fit-content;
   max-width: min(100%, 760px);
@@ -521,14 +476,12 @@ input {
   word-break: break-word;
 }
 
-/* Сообщение пользователя */
 .message.user {
   background: var(--user);
   color: var(--user-text);
   border-bottom-right-radius: 6px;
 }
 
-/* Сообщение ассистента */
 .message.bot {
   background: var(--assistant);
   color: var(--text);
@@ -538,7 +491,6 @@ input {
 
 /* =========================================================
    INPUT AREA
-   Нижняя панель с полем ввода и кнопкой отправки.
 ========================================================= */
 .input-area {
   flex-shrink: 0;
@@ -548,7 +500,6 @@ input {
   background: var(--bg);
 }
 
-/* Само поле ввода */
 .input-form {
   width: 100%;
   max-width: 760px;
@@ -561,9 +512,15 @@ input {
   padding: 10px 12px 10px 16px;
   box-shadow: 0 8px 24px var(--shadow);
   margin: 0 auto;
+  transition: opacity 0.2s ease, filter 0.2s ease;
 }
 
-/* Текстовое поле */
+.input-form.is-locked {
+  opacity: 0.65;
+  filter: grayscale(0.1);
+  pointer-events: none;
+}
+
 #queryInput {
   flex: 1;
   min-width: 0;
@@ -578,14 +535,13 @@ input {
   color: var(--muted);
 }
 
-/* Кнопка отправки */
 #sendBtn {
   width: 42px;
   height: 42px;
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  background: rgb(181, 140, 219);
+  background: var(--accent);
   color: rgb(255, 255, 255);
   font-size: 18px;
   flex-shrink: 0;
@@ -595,9 +551,13 @@ input {
   opacity: 0.8;
 }
 
+#queryInput:disabled,
+#sendBtn:disabled {
+  cursor: not-allowed;
+}
+
 /* =========================================================
    MODAL WINDOW
-   Используется для переименования чата.
 ========================================================= */
 .modal-overlay {
   position: fixed;
@@ -620,7 +580,6 @@ input {
   padding: 18px;
 }
 
-/* Верхняя строка модального окна */
 .modal-header {
   display: flex;
   align-items: center;
@@ -634,7 +593,6 @@ input {
   font-size: 18px;
 }
 
-/* Кнопка закрытия модалки */
 .modal-close-btn {
   width: 34px;
   height: 34px;
@@ -650,14 +608,12 @@ input {
   background: var(--hover);
 }
 
-/* Форма внутри модального окна */
 .modal-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* Инпут в модалке */
 .modal-input {
   width: 100%;
   border: 1px solid var(--border);
@@ -673,14 +629,12 @@ input {
   border-color: #3b82f6;
 }
 
-/* Кнопки действий внизу модалки */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-/* Базовый стиль кнопок модалки */
 .modal-btn {
   border: none;
   border-radius: 12px;
@@ -688,21 +642,141 @@ input {
   cursor: pointer;
 }
 
-/* Вторичная кнопка */
 .modal-btn.secondary {
   background: var(--hover);
   color: var(--text);
 }
 
-/* Главная кнопка */
 .modal-btn.primary {
   background: var(--text);
   color: var(--panel);
 }
 
+.modal-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* =========================================================
-   MARKDOWN В СООБЩЕНИЯХ АССИСТЕНТА
-   Чтобы красиво отображались заголовки, списки, code blocks.
+   SURVEY MODAL
+========================================================= */
+.survey-card {
+  max-width: 720px;
+  padding: 24px;
+}
+
+.survey-header {
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.survey-subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.survey-content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.survey-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.survey-section-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.survey-note {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.level-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.level-card {
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  border-radius: 16px;
+  padding: 18px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.level-card:hover {
+  background: var(--hover);
+  transform: translateY(-1px);
+}
+
+.level-card.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.level-card-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.level-card-text {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.topics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.topic-chip {
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.topic-chip:hover {
+  background: var(--hover);
+  transform: translateY(-1px);
+}
+
+.topic-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.survey-actions {
+  margin-top: 4px;
+}
+
+/* =========================================================
+   MARKDOWN
 ========================================================= */
 .message.bot p {
   margin: 8px 0;
@@ -734,7 +808,7 @@ input {
 }
 
 /* =========================================================
-   АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ЭКРАНОВ
+   MOBILE
 ========================================================= */
 @media (max-width: 900px) {
   .sidebar {
@@ -766,5 +840,14 @@ input {
   .chat-inner,
   .input-form {
     max-width: 100%;
+  }
+
+  .survey-card {
+    padding: 18px;
+  }
+
+  .level-options,
+  .topics-grid {
+    grid-template-columns: 1fr;
   }
 }
