@@ -185,7 +185,7 @@ class RAG:
 
         with torch.no_grad():
             for i in range(0, len(input_texts), self.embed_batch_size):
-                batch_texts = input_texts[i : i + self.embed_batch_size]
+                batch_texts = input_texts[i: i + self.embed_batch_size]
 
                 batch_dict = self.tokenizer(
                     batch_texts,
@@ -321,6 +321,7 @@ class MultiAgentSystem:
             "teacher": {"model": "llama-3.1-8b-instant", "temperature": 0.3},
             "coder": {"model": "llama-3.1-8b-instant", "temperature": 0.1},
             "validator": {"model": "llama-3.1-8b-instant", "temperature": 0.1},
+            "title_generator": {"model": "llama-3.1-8b-instant", "temperature": 0.2},
         }
 
         self.rag = RAG()
@@ -395,6 +396,20 @@ class MultiAgentSystem:
                 '  "final_text": "готовый текст для пользователя",\n'
                 '  "final_code": "чистый код без markdown или пустая строка"\n'
                 "}"
+            ),
+            "title_generator": (
+                "Ты создаешь короткие названия чатов.\n"
+                "На основе первого осмысленного сообщения пользователя придумай краткий заголовок чата.\n"
+                "Заголовок должен кратко описывать тему чата.\n"
+                "Правила:\n"
+                "- верни только название без кавычек, без пояснений и без markdown;\n"
+                "- от 2 до 6 слов;\n"
+                "- естественная краткая формулировка;\n"
+                "- можно на русском или английском, в зависимости от запроса пользователя;\n"
+                "- не используй точку в конце;\n"
+                "- не пиши 'Новый чат';\n"
+                "- начинай название с заглавной буквы;\n"
+                "- если запрос про код, кратко отрази задачу.\n"
             ),
         }
         return instructions.get(agent_name, "")
@@ -473,6 +488,36 @@ class MultiAgentSystem:
 
     def _should_use_rag(self, route: Dict[str, Any]) -> bool:
         return route["route"] in {"teacher", "coder", "teacher_coder"} and route["need_retrieval"]
+
+    def generate_chat_title(self, first_user_message: str) -> str:
+        cleaned_input = re.sub(r"\s+", " ", (first_user_message or "")).strip()
+        if not cleaned_input:
+            return "Новый чат"
+
+        title_agent = self._get_agent("title_generator")
+        raw_title = title_agent.execute(cleaned_input, "")
+        title = raw_title.strip()
+
+        title = re.sub(r"^```.*?\n?", "", title, flags=re.DOTALL)
+        title = re.sub(r"```$", "", title).strip()
+        title = title.replace('"', "").replace("'", "").strip()
+        title = re.sub(r"\s+", " ", title).strip()
+        title = re.sub(r"[.!?]+$", "", title).strip()
+
+        if not title or title.lower() == "новый чат":
+            return build_title_fallback(cleaned_input)
+
+        words = title.split()
+        if len(words) > 6:
+            title = " ".join(words[:6])
+
+        if len(title) > 60:
+            title = title[:60].rsplit(" ", 1)[0].strip()
+
+        if not title:
+            return build_title_fallback(cleaned_input)
+
+        return title[:1].upper() + title[1:]
 
     def process_query(
         self,
