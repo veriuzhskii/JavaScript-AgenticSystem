@@ -26,7 +26,7 @@
       <div id="chatList" class="chat-list"></div>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content empty-state" id="mainContent">
       <header class="topbar">
         <div class="topbar-left">
           <button id="sidebarToggle" class="icon-btn" title="Скрыть/показать панель" type="button"></button>
@@ -36,7 +36,7 @@
         <button id="themeToggle" class="icon-btn" title="Сменить тему" type="button"></button>
       </header>
 
-      <section class="chat-area">
+      <section class="chat-area" id="chatArea">
         <div class="chat-inner">
           <div id="welcomeScreen" class="welcome-screen">
             <h1>Чем помочь?</h1>
@@ -49,12 +49,12 @@
 
       <footer class="input-area">
         <form id="inputForm" class="input-form">
-          <input
+          <textarea
             id="queryInput"
-            type="text"
             placeholder="Спросите что-нибудь..."
             autocomplete="off"
-          />
+            rows="1"
+          ></textarea>
           <button type="submit" id="sendBtn" aria-label="Отправить сообщение"></button>
         </form>
       </footer>
@@ -170,6 +170,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script type="module" src="/static/js/script.js?v=8"></script>
+  <script type="module" src="/static/js/script.js?v=10"></script>
 </body>
 </html>
