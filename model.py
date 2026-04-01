@@ -18,6 +18,9 @@ from transformers import AutoModel, AutoTokenizer
 # -----------------------------
 # Utils
 # -----------------------------
+CYRILLIC_PATTERN = re.compile(r"[А-Яа-яЁё]")
+
+
 def get_device() -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -41,6 +44,37 @@ def safe_json_loads(raw_text: str, fallback: Dict[str, Any]) -> Dict[str, Any]:
         return json.loads(text)
     except Exception:
         return fallback
+
+
+def contains_cyrillic(text: str) -> bool:
+    return bool(CYRILLIC_PATTERN.search(text or ""))
+
+
+def code_has_cyrillic_identifiers(code: str) -> bool:
+    if not code:
+        return False
+    return contains_cyrillic(code)
+
+
+def build_title_fallback(message: str, max_words: int = 6, max_len: int = 60) -> str:
+    text = re.sub(r"```.*?```", " ", message or "", flags=re.DOTALL)
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"[{}[\];=<>`]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    if not text:
+        return "Новый чат"
+
+    words = text.split()
+    short = " ".join(words[:max_words]).strip()
+
+    if len(short) > max_len:
+        short = short[:max_len].rsplit(" ", 1)[0].strip()
+
+    if not short:
+        return "Новый чат"
+
+    return short[:1].upper() + short[1:]
 
 
 # -----------------------------
@@ -509,6 +543,15 @@ class MultiAgentSystem:
             coder = self._get_agent("coder")
             coder_output = coder.execute(query, worker_context)
 
+        if coder_output != "NO_CODE_FOUND" and code_has_cyrillic_identifiers(coder_output):
+            retry_context = (
+                f"{worker_context}\n\n"
+                "Твой предыдущий ответ нарушил правило: в коде обнаружена кириллица. "
+                "Сгенерируй код заново. Все идентификаторы должны быть только на английском языке."
+            ).strip()
+            coder = self._get_agent("coder")
+            coder_output = coder.execute(query, retry_context)
+
         validator_input_parts = [
             f"USER QUERY:\n{query}",
             f"TEACHER OUTPUT:\n{teacher_output or ''}",
@@ -521,7 +564,7 @@ class MultiAgentSystem:
         validator_context = "\n\n".join(validator_input_parts).strip()
 
         validator = self._get_agent("validator")
-        validator_output = validator.execute(query, validator_context)
+        validator_output = validator.execute("Собери финальный ответ пользователю.", validator_context)
         validated = self._parse_validator_output(validator_output)
 
         final_text = validated["final_text"].strip()
@@ -532,6 +575,9 @@ class MultiAgentSystem:
 
         if not final_code and coder_output and coder_output != "NO_CODE_FOUND":
             final_code = coder_output.strip()
+
+        if final_code and code_has_cyrillic_identifiers(final_code):
+            final_code = ""
 
         return {
             "route": route,
