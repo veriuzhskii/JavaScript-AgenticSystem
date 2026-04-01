@@ -7,51 +7,25 @@
   --accent-soft: rgba(181, 140, 219, 0.14);
 }
 
-
 html[data-theme="light"] {
-  /* Основной фон */
   --bg: #f7f7fb;
-
-  /* Sidebar */
   --sidebar-bg: #f1f2f7;
-
-  /* Панели (модалки, меню) */
   --panel: #ffffff;
-
-  /* Текст */
   --text: #111111;
   --muted: #6b7280;
-
-  /* Границы */
   --border: #e5e7eb;
-
-  /* Hover */
   --hover: #f0ebff;
-
-  /* Сообщения */
-  --assistant: #ffffff;
+  --assistant: transparent;
   --user: #746cb3;
   --user-text: #ffffff;
-
-  /* Input */
   --input-bg: #ffffff;
-
-  /* Тень */
   --shadow: rgba(0, 0, 0, 0.06);
-
-  /* Danger */
   --danger: #dc2626;
-
-  /* Overlay */
   --overlay: rgba(17, 24, 39, 0.45);
-
-  /* Scrollbars */
   --main-scrollbar-thumb: rgba(0, 0, 0, 0.18);
   --main-scrollbar-thumb-hover: rgba(0, 0, 0, 0.32);
-
   --sidebar-scrollbar-thumb: rgba(0, 0, 0, 0.14);
   --sidebar-scrollbar-thumb-hover: rgba(0, 0, 0, 0.26);
-
   --accent: rgb(181, 140, 219);
   --accent-hover: rgb(166, 124, 206);
   --accent-soft: rgba(181, 140, 219, 0.14);
@@ -65,19 +39,17 @@ html[data-theme="dark"] {
   --muted: #a1a1aa;
   --border: #343541;
   --hover: #2a2b32;
-  --assistant: #2f2f2f;
+  --assistant: transparent;
   --user: #3a3a3a;
   --user-text: #ffffff;
   --input-bg: #2f2f2f;
   --shadow: rgba(0, 0, 0, 0.22);
   --danger: #f87171;
   --overlay: rgba(0, 0, 0, 0.55);
-
   --main-scrollbar-thumb: rgba(255, 255, 255, 0.18);
   --main-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
   --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.16);
   --sidebar-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
-
   --accent: rgb(181, 140, 219);
   --accent-hover: rgb(194, 156, 227);
   --accent-soft: rgba(181, 140, 219, 0.14);
@@ -110,8 +82,13 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
+}
+
+textarea {
+  resize: none;
 }
 
 .hidden {
@@ -238,6 +215,25 @@ input {
   font-size: 14px;
 }
 
+.chat-title-caret {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: currentColor;
+  animation: sidebarCaretBlink 0.9s steps(1) infinite;
+}
+
+@keyframes sidebarCaretBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  50.01%, 100% {
+    opacity: 0;
+  }
+}
+
 .chat-menu-btn {
   border: none;
   background: transparent;
@@ -287,13 +283,6 @@ input {
   padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.chat-context-menu-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -413,19 +402,29 @@ input {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  min-height: 100%;
 }
 
 /* =========================================================
-   WELCOME SCREEN
+   EMPTY STATE / WELCOME
 ========================================================= */
+.main-content.empty-state .chat-area {
+  display: flex;
+  align-items: stretch;
+}
+
+.main-content.empty-state .chat-inner {
+  justify-content: center;
+}
+
 .welcome-screen {
-  min-height: calc(100vh - 56px - 96px);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 24px;
   flex-direction: column;
+  margin-top: -72px;
 }
 
 .welcome-screen h1 {
@@ -470,9 +469,8 @@ input {
   max-width: min(100%, 760px);
   padding: 14px 16px;
   border-radius: 18px;
-  line-height: 1.65;
+  line-height: 1.7;
   font-size: 15px;
-  box-shadow: 0 1px 3px var(--shadow);
   word-break: break-word;
 }
 
@@ -480,13 +478,36 @@ input {
   background: var(--user);
   color: var(--user-text);
   border-bottom-right-radius: 6px;
+  white-space: pre-wrap;
+  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .message.bot {
-  background: var(--assistant);
+  background: transparent;
   color: var(--text);
-  border: 1px solid var(--border);
-  border-bottom-left-radius: 6px;
+  border: none;
+  box-shadow: none;
+  padding: 4px 0;
+  border-radius: 0;
+}
+
+.assistant-typing-caret {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: currentColor;
+  animation: assistantCaretBlink 0.9s steps(1) infinite;
+}
+
+@keyframes assistantCaretBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  50.01%, 100% {
+    opacity: 0;
+  }
 }
 
 /* =========================================================
@@ -500,6 +521,10 @@ input {
   background: var(--bg);
 }
 
+.main-content.empty-state .input-area {
+  padding-top: 0;
+}
+
 .input-form {
   width: 100%;
   max-width: 760px;
@@ -509,7 +534,7 @@ input {
   border: 1px solid var(--border);
   background: var(--input-bg);
   border-radius: 22px;
-  padding: 10px 12px 10px 16px;
+  padding: 6px 12px 6px 16px;
   box-shadow: 0 8px 24px var(--shadow);
   margin: 0 auto;
   transition: opacity 0.2s ease, filter 0.2s ease;
@@ -524,11 +549,17 @@ input {
 #queryInput {
   flex: 1;
   min-width: 0;
+  min-height: 24px;
+  max-height: 220px;
   border: none;
   outline: none;
   background: transparent;
   color: var(--text);
   font-size: 16px;
+  line-height: 1.5;
+  padding: 0;
+  overflow-y: hidden;
+  white-space: pre-wrap;
 }
 
 #queryInput::placeholder {
@@ -543,8 +574,20 @@ input {
   cursor: pointer;
   background: var(--accent);
   color: rgb(255, 255, 255);
-  font-size: 18px;
   flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  line-height: 0;
+}
+
+#sendBtn svg {
+  display: block;
+  width: 20px;
+  height: 20px;
 }
 
 #sendBtn:hover {
