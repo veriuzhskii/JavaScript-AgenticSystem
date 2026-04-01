@@ -64,6 +64,11 @@ const assistantTypingState = {
   isActive: false
 };
 
+const thinkingState = {
+  chatId: null,
+  isActive: false
+};
+
 /* =========================
    API
 ========================= */
@@ -158,10 +163,27 @@ function escapeHtml(value) {
 }
 
 /* =========================
+   THINKING BUBBLE
+========================= */
+function showThinkingBubble(chatId) {
+  thinkingState.chatId = chatId;
+  thinkingState.isActive = true;
+  render();
+  scrollMessagesToBottom();
+}
+
+function hideThinkingBubble() {
+  thinkingState.chatId = null;
+  thinkingState.isActive = false;
+  render();
+}
+
+/* =========================
    TITLE TYPING ANIMATION
 ========================= */
 function clearTitleTyping(chatId) {
   const timer = titleTypingState.timers.get(chatId);
+
   if (timer) {
     clearTimeout(timer);
     titleTypingState.timers.delete(chatId);
@@ -177,6 +199,7 @@ function clearAllTitleTyping() {
     clearTimeout(timer);
     titleTypingState.timers.delete(chatId);
   }
+
   titleTypingState.activeChatId = null;
 }
 
@@ -185,9 +208,9 @@ function renderTypingTitleChunk(chatId, fullTitle, visibleLength) {
   if (!titleEl) return;
 
   const visibleText = fullTitle.slice(0, visibleLength);
-  titleEl.innerHTML = `
-    <span class="chat-title-text">${escapeHtml(visibleText)}</span><span class="chat-title-caret"></span>
-  `;
+  titleEl.innerHTML =
+    `<span class="chat-title-text">${escapeHtml(visibleText)}</span>` +
+    `<span class="chat-title-caret"></span>`;
 }
 
 function finalizeTypingTitle(chatId, fullTitle) {
@@ -275,12 +298,14 @@ function renderAssistantTypingFrame() {
 
 function finalizeAssistantTyping() {
   const currentChat = chats[assistantTypingState.chatId];
+
   if (!currentChat) {
     clearAssistantTyping();
     return;
   }
 
   const message = currentChat.messages[assistantTypingState.messageIndex];
+
   if (!message) {
     clearAssistantTyping();
     return;
@@ -290,8 +315,10 @@ function finalizeAssistantTyping() {
     const row = messagesDiv.querySelector(
       `[data-assistant-message-index="${assistantTypingState.messageIndex}"]`
     );
+
     if (row) {
       const bubble = row.querySelector(".message.bot");
+
       if (bubble) {
         if (window.marked) {
           bubble.innerHTML = marked.parse(message.content);
@@ -349,16 +376,8 @@ function startAssistantTyping(chatId, messageIndex, fullText) {
 function setupIcons() {
   sidebarToggle.innerHTML = icons.menu;
   sendBtn.innerHTML = icons.send;
-
-  contextRenameBtn.innerHTML = `
-    ${icons.rename}
-    <span>Переименовать</span>
-  `;
-
-  contextDeleteBtn.innerHTML = `
-    ${icons.delete}
-    <span>Удалить</span>
-  `;
+  contextRenameBtn.innerHTML = `${icons.rename} <span>Переименовать</span>`;
+  contextDeleteBtn.innerHTML = `${icons.delete} <span>Удалить</span>`;
 }
 
 function applyTheme(theme) {
@@ -418,9 +437,7 @@ document.addEventListener("keydown", (e) => {
 input.addEventListener("input", autoResizeTextarea);
 
 input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && e.shiftKey) {
-    return;
-  }
+  if (e.key === "Enter" && e.shiftKey) return;
 
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -436,19 +453,16 @@ renameForm.addEventListener("submit", async (e) => {
     return;
   }
 
-  if (renameTargetChatId === DRAFT_CHAT_ID) {
-    const newTitle = renameInput.value.trim();
-    if (!newTitle) return;
+  const newTitle = renameInput.value.trim();
+  if (!newTitle) return;
 
+  if (renameTargetChatId === DRAFT_CHAT_ID) {
     chats[renameTargetChatId].title = newTitle;
     clearTitleTyping(renameTargetChatId);
     render();
     closeRenameModal();
     return;
   }
-
-  const newTitle = renameInput.value.trim();
-  if (!newTitle) return;
 
   try {
     const updatedChat = await api(`/chats/${renameTargetChatId}/title`, {
@@ -499,6 +513,7 @@ form.addEventListener("submit", async (e) => {
   if (!text) return;
 
   let currentChat = getCurrentChat();
+
   if (!currentChat) {
     startDraftChat();
     currentChat = getCurrentChat();
@@ -513,6 +528,7 @@ form.addEventListener("submit", async (e) => {
   resetTextareaHeight();
   render();
   setSendingState(true);
+  showThinkingBubble(currentChatId);
   scrollMessagesToBottom();
 
   try {
@@ -525,6 +541,8 @@ form.addEventListener("submit", async (e) => {
         messages: currentChat.messages
       })
     });
+
+    hideThinkingBubble();
 
     if (currentChatId === DRAFT_CHAT_ID) {
       delete chats[DRAFT_CHAT_ID];
@@ -541,9 +559,9 @@ form.addEventListener("submit", async (e) => {
 
     currentChatId = data.chat_id;
     saveCurrentChatId();
+
     render();
     scrollMessagesToBottom();
-
     maybeAnimateGeneratedTitle(data.chat_id, previousDraftTitle, data.title);
 
     const lastMessageIndex = chats[data.chat_id].messages.length - 1;
@@ -553,6 +571,8 @@ form.addEventListener("submit", async (e) => {
       startAssistantTyping(data.chat_id, lastMessageIndex, lastMessage.content);
     }
   } catch (err) {
+    hideThinkingBubble();
+
     const fallbackChat = getCurrentChat();
     if (fallbackChat) {
       fallbackChat.messages.push({
@@ -560,6 +580,7 @@ form.addEventListener("submit", async (e) => {
         content: "Ошибка подключения к серверу."
       });
     }
+
     render();
     scrollMessagesToBottom();
   } finally {
@@ -631,7 +652,6 @@ function updateSurveyUI() {
 
   levelBeginnerBtn.classList.toggle("active", isBeginner);
   levelReturningBtn.classList.toggle("active", isReturning);
-
   topicsSection.classList.toggle("hidden", !isReturning);
 
   const topicButtons = topicsGrid.querySelectorAll(".topic-chip");
@@ -667,6 +687,7 @@ async function loadChatsFromServer() {
   chats = {};
   clearAllTitleTyping();
   clearAssistantTyping();
+  hideThinkingBubble();
 
   for (const chat of list) {
     chats[chat.chat_id] = {
@@ -692,6 +713,7 @@ async function loadChatsFromServer() {
 
 async function loadChatById(chatId) {
   clearAssistantTyping();
+  hideThinkingBubble();
 
   if (chatId === DRAFT_CHAT_ID) {
     currentChatId = DRAFT_CHAT_ID;
@@ -701,11 +723,7 @@ async function loadChatById(chatId) {
   }
 
   const fullChat = await api(`/chats/${chatId}`);
-
-  chats[chatId] = {
-    ...fullChat
-  };
-
+  chats[chatId] = { ...fullChat };
   currentChatId = chatId;
   saveCurrentChatId();
   render();
@@ -716,6 +734,7 @@ function startDraftChat(shouldRender = true) {
   ensureDraftChat();
   clearTitleTyping(DRAFT_CHAT_ID);
   clearAssistantTyping();
+  hideThinkingBubble();
 
   chats[DRAFT_CHAT_ID] = {
     chat_id: null,
@@ -764,15 +783,20 @@ async function deleteChat(chatId) {
     delete chats[chatId];
     clearTitleTyping(chatId);
     clearAssistantTyping();
+    hideThinkingBubble();
     startDraftChat();
     return;
   }
 
   try {
-    await api(`/chats/${chatId}`, { method: "DELETE" });
+    await api(`/chats/${chatId}`, {
+      method: "DELETE"
+    });
+
     delete chats[chatId];
     clearTitleTyping(chatId);
     clearAssistantTyping();
+    hideThinkingBubble();
 
     const ids = Object.keys(chats).filter((id) => id !== DRAFT_CHAT_ID);
 
@@ -889,12 +913,12 @@ function renderMessages() {
 
   const currentChat = getCurrentChat();
   const messages = currentChat?.messages || [];
-  const isEmpty = messages.length === 0;
+  const isEmpty = messages.length === 0 && !(thinkingState.isActive && thinkingState.chatId === currentChatId);
 
   mainContent.classList.toggle("empty-state", isEmpty);
-
   welcomeScreen.style.display = isEmpty ? "flex" : "none";
   messagesDiv.style.display = isEmpty ? "none" : "flex";
+
   chatTitleEl.textContent = currentChat?.title || "Новый чат";
 
   messages.forEach((msg, index) => {
@@ -926,6 +950,23 @@ function renderMessages() {
     row.appendChild(el);
     messagesDiv.appendChild(row);
   });
+
+  if (thinkingState.isActive && thinkingState.chatId === currentChatId) {
+    const row = document.createElement("div");
+    row.className = "message-row bot-row";
+
+    const bubble = document.createElement("div");
+    bubble.className = "message bot thinking";
+    bubble.setAttribute("aria-label", "Ассистент думает");
+    bubble.innerHTML = `
+      <span class="thinking-dot"></span>
+      <span class="thinking-dot"></span>
+      <span class="thinking-dot"></span>
+    `;
+
+    row.appendChild(bubble);
+    messagesDiv.appendChild(row);
+  }
 }
 
 function render() {

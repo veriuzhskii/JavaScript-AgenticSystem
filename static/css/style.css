@@ -22,10 +22,12 @@ html[data-theme="light"] {
   --shadow: rgba(0, 0, 0, 0.06);
   --danger: #dc2626;
   --overlay: rgba(17, 24, 39, 0.45);
+
   --main-scrollbar-thumb: rgba(0, 0, 0, 0.18);
   --main-scrollbar-thumb-hover: rgba(0, 0, 0, 0.32);
   --sidebar-scrollbar-thumb: rgba(0, 0, 0, 0.14);
   --sidebar-scrollbar-thumb-hover: rgba(0, 0, 0, 0.26);
+
   --accent: rgb(181, 140, 219);
   --accent-hover: rgb(166, 124, 206);
   --accent-soft: rgba(181, 140, 219, 0.14);
@@ -46,10 +48,12 @@ html[data-theme="dark"] {
   --shadow: rgba(0, 0, 0, 0.22);
   --danger: #f87171;
   --overlay: rgba(0, 0, 0, 0.55);
+
   --main-scrollbar-thumb: rgba(255, 255, 255, 0.18);
   --main-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
   --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.16);
   --sidebar-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+
   --accent: rgb(181, 140, 219);
   --accent-hover: rgb(194, 156, 227);
   --accent-soft: rgba(181, 140, 219, 0.14);
@@ -226,10 +230,12 @@ textarea {
 }
 
 @keyframes sidebarCaretBlink {
-  0%, 50% {
+  0%,
+  50% {
     opacity: 1;
   }
-  50.01%, 100% {
+  50.01%,
+  100% {
     opacity: 0;
   }
 }
@@ -502,11 +508,58 @@ textarea {
 }
 
 @keyframes assistantCaretBlink {
-  0%, 50% {
+  0%,
+  50% {
     opacity: 1;
   }
-  50.01%, 100% {
+  50.01%,
+  100% {
     opacity: 0;
+  }
+}
+
+/* =========================================================
+   THINKING BUBBLE
+========================================================= */
+.message.bot.thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px var(--shadow);
+  min-width: 64px;
+}
+
+.thinking-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.35;
+  animation: thinkingBounce 1.2s infinite ease-in-out;
+}
+
+.thinking-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.thinking-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes thinkingBounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-4px) scale(1.08);
+    opacity: 1;
   }
 }
 
@@ -575,11 +628,9 @@ textarea {
   background: var(--accent);
   color: rgb(255, 255, 255);
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 0;
   line-height: 0;
 }
