@@ -1,0 +1,235 @@
+{
+  "coder": {
+    "beginner": [
+      {
+        "id": 1,
+        "question": "console.log(user.name);\nlet user = { name: \"Ann\" };",
+        "answer": "let user = { name: \"Ann\" };\nconsole.log(user.name);"
+      },
+      {
+        "id": 2,
+        "question": "const x = 1;\nx = 2;\nconsole.log(x);",
+        "answer": "let x = 1;\nx = 2;\nconsole.log(x);"
+      },
+      {
+        "id": 3,
+        "question": "console.log([] == false);\nconsole.log(\"\" == 0);",
+        "answer": "console.log([] === false);\nconsole.log(\"\" === 0);"
+      },
+      {
+        "id": 4,
+        "question": "function sum(a, b) {\n a + b;\n}\nconsole.log(sum(2, 3));",
+        "answer": "function sum(a, b) {\n return a + b;\n}\nconsole.log(sum(2, 3));"
+      },
+      {
+        "id": 5,
+        "question": "const value = \"0\";\nif (value) {\n console.log(\"truthy\");\n} else {\n console.log(\"falsy\");\n}",
+        "answer": "const value = \"0\";\nif (value === \"0\") {\n console.log(\"truthy\");\n} else {\n console.log(\"falsy\");\n}"
+      },
+      {
+        "id": 6,
+        "question": "const arr = [\"a\", \"b\", \"c\"];\nfor (let i = 0; i < arr.length - 1; i++) {\n console.log(arr[i]);\n}",
+        "answer": "const arr = [\"a\", \"b\", \"c\"];\nfor (let i = 0; i < arr.length; i++) {\n console.log(arr[i]);\n}"
+      },
+      {
+        "id": 7,
+        "question": "const arr = [1, 2, 3];\ndelete arr[1];\nconsole.log(arr, arr.length);",
+        "answer": "const arr = [1, 2, 3];\narr.splice(1, 1);\nconsole.log(arr, arr.length);"
+      },
+      {
+        "id": 8,
+        "question": "const nums = [2, 10, 1];\nnums.sort();\nconsole.log(nums);",
+        "answer": "const nums = [2, 10, 1];\nnums.sort((a, b) => a - b);\nconsole.log(nums);"
+      },
+      {
+        "id": 9,
+        "question": "const a = { nested: { x: 1 } };\nconst b = { ...a };\nb.nested.x = 2;\nconsole.log(a.nested.x);",
+        "answer": "const a = { nested: { x: 1 } };\nconst b = structuredClone(a);\nb.nested.x = 2;\nconsole.log(a.nested.x);"
+      },
+      {
+        "id": 10,
+        "question": "const obj = { a: 1, b: undefined, c: () => 1 };\nconsole.log(JSON.stringify(obj));",
+        "answer": "const obj = { a: 1, b: null, c: \"() => 1\" };\nconsole.log(JSON.stringify(obj));"
+      },
+      {
+        "id": 11,
+        "question": "console.log(0.1 + 0.2 === 0.3);\nconsole.log(0 / 0);",
+        "answer": "console.log(Math.abs(0.1 + 0.2 - 0.3) < Number.EPSILON);\nconsole.log(Number.isNaN(0 / 0));"
+      },
+      {
+        "id": 12,
+        "question": "let s = \"hi\";\ns[0] = \"H\";\nconsole.log(s);",
+        "answer": "let s = \"hi\";\ns = \"H\" + s.slice(1);\nconsole.log(s);"
+      },
+      {
+        "id": 13,
+        "question": "for (var i = 0; i < 3; i++) {\n setTimeout(() => console.log(i), 0);\n}",
+        "answer": "for (let i = 0; i < 3; i++) {\n setTimeout(() => console.log(i), 0);\n}"
+      },
+      {
+        "id": 14,
+        "question": "\"use strict\";\nfunction f() {\n console.log(this);\n}\nf();",
+        "answer": "\"use strict\";\nfunction f() {\n console.log(this);\n}\nf.call(this);"
+      },
+      {
+        "id": 15,
+        "question": "const a = { x: 1 };\nconst b = { x: 1 };\nconsole.log(a === b);",
+        "answer": "const a = { x: 1 };\nconst b = { x: 1 };\nconsole.log(a.x === b.x);"
+      },
+      {
+        "id": 16,
+        "question": "console.log(parseInt(\"08\"));\nconsole.log(parseInt(\"1e3\"));",
+        "answer": "console.log(parseInt(\"08\", 10));\nconsole.log(Number(\"1e3\"));"
+      },
+      {
+        "id": 17,
+        "question": "const user = null;\nconsole.log(user.name);",
+        "answer": "const user = null;\nconsole.log(user?.name);"
+      },
+      {
+        "id": 18,
+        "question": "const arr = [1, 2, 3];\nconst res = arr.map(x => { x * 2; });\nconsole.log(res);",
+        "answer": "const arr = [1, 2, 3];\nconst res = arr.map(x => x * 2);\nconsole.log(res);"
+      },
+      {
+        "id": 19,
+        "question": "const arr = [0, 1, 2, 3];\nconst res = arr.filter(Boolean);\nconsole.log(res);",
+        "answer": "const arr = [0, 1, 2, 3];\nconst res = arr.filter(x => x !== undefined && x !== null);\nconsole.log(res);"
+      },
+      {
+        "id": 20,
+        "question": "const state = { items: [1, 2] };\nfunction addItem(s, item) {\n s.items.push(item);\n return s;\n}\nconst next = addItem(state, 3);\nconsole.log(state.items, next.items);",
+        "answer": "const state = { items: [1, 2] };\nfunction addItem(s, item) {\n return { ...s, items: [...s.items, item] };\n}\nconst next = addItem(state, 3);\nconsole.log(state.items, next.items);"
+      },
+      {
+        "id": 21,
+        "question": "let ready = false;\nsetTimeout(() => { ready = true; }, 0);\nif (ready) console.log(\"ready\");",
+        "answer": "let ready = false;\nsetTimeout(() => { \n  ready = true;\n  if (ready) console.log(\"ready\");\n}, 0);"
+      },
+      {
+        "id": 22,
+        "question": "try {\n setTimeout(() => { throw new Error(\"boom\"); }, 0);\n} catch (e) {\n console.log(\"caught\", e);\n}",
+        "answer": "setTimeout(() => { \n  try {\n    throw new Error(\"boom\");\n  } catch (e) {\n    console.log(\"caught\", e);\n  }\n}, 0);"
+      },
+      {
+        "id": 23,
+        "question": "Promise.resolve().then(() => {\n JSON.parse(\"{\");\n});\nconsole.log(\"after\");",
+        "answer": "Promise.resolve().then(() => {\n JSON.parse(\"{\");\n}).catch(err => console.log(\"after\", err));"
+      },
+      {
+        "id": 24,
+        "question": "console.log(1);\nsetTimeout(() => console.log(2), 0);\nPromise.resolve().then(() => console.log(3));\nconsole.log(4);",
+        "answer": "console.log(1);\nqueueMicrotask(() => console.log(3));\nconsole.log(4);\nsetTimeout(() => console.log(2), 0);"
+      },
+      {
+        "id": 25,
+        "question": "async function f() {\n console.log(\"A\");\n await Promise.resolve();\n console.log(\"B\");\n}\nf();\nconsole.log(\"C\");",
+        "answer": "async function f() {\n console.log(\"A\");\n await Promise.resolve();\n console.log(\"B\");\n}\nf().then(() => console.log(\"C\"));"
+      }
+    ],
+    "intermediate": [
+      {
+        "id": 1,
+        "question": "const obj = {\n x: 10,\n getX() {\n return this.x;\n }\n};\nconst f = obj.getX;\nconsole.log(f());",
+        "answer": "const obj = {\n x: 10,\n getX() {\n return this.x;\n }\n};\nconst f = obj.getX.bind(obj);\nconsole.log(f());"
+      },
+      {
+        "id": 2,
+        "question": "class Counter {\n constructor() { this.n = 0; }\n inc() { this.n++; }\n}\nconst c = new Counter();\nsetTimeout(c.inc, 0);\nsetTimeout(() => console.log(c.n), 10);",
+        "answer": "class Counter {\n constructor() { this.n = 0; }\n inc = () => { this.n++; }\n}\nconst c = new Counter();\nsetTimeout(c.inc, 0);\nsetTimeout(() => console.log(c.n), 10);"
+      },
+      {
+        "id": 3,
+        "question": "function makeLogger() {\n let x = 1;\n return () => x;\n}\nconst log = makeLogger();\nconsole.log(log());",
+        "answer": "function makeLogger() {\n let x = 1;\n return {\n   get: () => x,\n   set: (val) => { x = val; }\n };\n}\nconst log = makeLogger();\nlog.set(2);\nconsole.log(log.get());"
+      },
+      {
+        "id": 4,
+        "question": "const data = {\n d: new Date(\"2020-01-01\"),\n m: new Map([[\"a\", 1]]),\n u: undefined\n};\nconst copy = JSON.parse(JSON.stringify(data));\nconsole.log(copy);",
+        "answer": "const data = {\n d: new Date(\"2020-01-01\"),\n m: new Map([[\"a\", 1]]),\n u: undefined\n};\nconst copy = structuredClone(data);\nconsole.log(copy);"
+      },
+      {
+        "id": 5,
+        "question": "const tasks = [\n Promise.resolve(1),\n Promise.reject(new Error(\"bad\")),\n Promise.resolve(3)\n];\nPromise.all(tasks).then(console.log).catch(console.error);",
+        "answer": "const tasks = [\n Promise.resolve(1),\n Promise.reject(new Error(\"bad\")),\n Promise.resolve(3)\n];\nPromise.allSettled(tasks).then(console.log);"
+      },
+      {
+        "id": 6,
+        "question": "async function run() {\n const res = await fetch(\"/api\");\n const data = await res.json();\n return data;\n}\nrun().then(console.log).catch(console.error);",
+        "answer": "async function run() {\n const res = await fetch(\"/api\");\n if (!res.ok) throw new Error(`HTTP error ${res.status}`);\n const data = await res.json();\n return data;\n}\nrun().then(console.log).catch(console.error);"
+      },
+      {
+        "id": 7,
+        "question": "async function load(ids) {\n return ids.map(async id => {\n const r = await fetch(`/item/${id}`);\n return r.json();\n });\n}\nload([1,2,3]).then(console.log);",
+        "answer": "async function load(ids) {\n return Promise.all(ids.map(async id => {\n const r = await fetch(`/item/${id}`);\n return r.json();\n }));\n}\nload([1,2,3]).then(console.log);"
+      },
+      {
+        "id": 8,
+        "question": "const out = [];\n[100, 10, 50].forEach(ms => {\n setTimeout(() => out.push(ms), ms);\n});\nsetTimeout(() => console.log(out), 120);",
+        "answer": "const out = [];\nfor (const ms of [100, 10, 50]) {\n await new Promise(r => setTimeout(() => {\n   out.push(ms);\n   r();\n }, ms));\n}\nconsole.log(out);"
+      },
+      {
+        "id": 9,
+        "question": "const btn = document.querySelector(\"button\");\nbtn.addEventListener(\"click\", () => console.log(\"hi\"));\nbtn.removeEventListener(\"click\", () => console.log(\"hi\"));",
+        "answer": "const btn = document.querySelector(\"button\");\nconst handler = () => console.log(\"hi\");\nbtn.addEventListener(\"click\", handler);\nbtn.removeEventListener(\"click\", handler);"
+      },
+      {
+        "id": 10,
+        "question": "function subscribe(bus) {\n bus.on(\"msg\", () => console.log(\"msg\"));\n}\nfunction unsubscribe(bus) {\n bus.off(\"msg\", () => console.log(\"msg\"));\n}",
+        "answer": "const handler = () => console.log(\"msg\");\nfunction subscribe(bus) {\n bus.on(\"msg\", handler);\n}\nfunction unsubscribe(bus) {\n bus.off(\"msg\", handler);\n}"
+      },
+      {
+        "id": 11,
+        "question": "function A() {}\nconst a = new A();\nA.prototype = {};\nconsole.log(a instanceof A);",
+        "answer": "function A() {}\nA.prototype = {};\nconst a = new A();\nconsole.log(a instanceof A);"
+      },
+      {
+        "id": 12,
+        "question": "const obj = {};\nObject.defineProperty(obj, \"x\", { value: 1, enumerable: false });\nconsole.log(Object.keys(obj));\nconsole.log(obj.x);",
+        "answer": "const obj = {};\nObject.defineProperty(obj, \"x\", { value: 1, enumerable: true });\nconsole.log(Object.keys(obj));\nconsole.log(obj.x);"
+      },
+      {
+        "id": 13,
+        "question": "function normalize(user) {\n user.name = user.name.trim();\n return user;\n}\nconst u = { name: \" Ann \" };\nconst v = normalize(u);\nconsole.log(u === v, u);",
+        "answer": "function normalize(user) {\n return { ...user, name: user.name.trim() };\n}\nconst u = { name: \" Ann \" };\nconst v = normalize(u);\nconsole.log(u === v, u);"
+      },
+      {
+        "id": 14,
+        "question": "const s = \"{'a':1}\";\nconsole.log(JSON.parse(s));",
+        "answer": "const s = '{\"a\":1}';\nconsole.log(JSON.parse(s));"
+      },
+      {
+        "id": 15,
+        "question": "Promise.resolve().then(() => {\n setTimeout(() => console.log(\"later\"), 0);\n}).then(() => console.log(\"after\"));",
+        "answer": "Promise.resolve().then(() => {\n return new Promise(r => setTimeout(() => {\n   console.log(\"later\");\n   r();\n }, 0));\n}).then(() => console.log(\"after\"));"
+      }
+    ],
+    "advanced": [
+      {
+        "id": 1,
+        "question": "function busy() {\n const start = Date.now();\n while (Date.now() - start < 3000) {}\n}\nsetTimeout(() => console.log(\"timer\"), 0);\nbusy();\nconsole.log(\"done\");",
+        "answer": "function busy() {\n return new Promise(r => setTimeout(() => {\n   const start = Date.now();\n   while (Date.now() - start < 3000) {}\n   r();\n }, 0));\n}\nsetTimeout(() => console.log(\"timer\"), 0);\nbusy().then(() => console.log(\"done\"));"
+      },
+      {
+        "id": 2,
+        "question": "const cache = new Map();\nfunction memo(key, value) {\n cache.set(key, value);\n}\nsetInterval(() => memo({ id: Math.random() }, new Array(1e5).fill(1)), 10);",
+        "answer": "const cache = new WeakMap();\nfunction memo(key, value) {\n cache.set(key, value);\n}\nlet intervalId = setInterval(() => {\n const key = { id: Math.random() };\n memo(key, new Array(1e5).fill(1));\n setTimeout(() => cache.delete(key), 1000);\n}, 10);"
+      },
+      {
+        "id": 3,
+        "question": "function flood() {\n queueMicrotask(flood);\n}\nflood();\nsetTimeout(() => console.log(\"timer\"), 0);",
+        "answer": "function flood() {\n setTimeout(flood, 0);\n}\nflood();\nsetTimeout(() => console.log(\"timer\"), 0);"
+      },
+      {
+        "id": 4,
+        "question": "const fs = require(\"fs/promises\");\nasync function writeMany() {\n const p1 = fs.writeFile(\"a.txt\", \"1\");\n const p2 = fs.writeFile(\"a.txt\", \"2\");\n await Promise.all([p1, p2]);\n}\nwriteMany();",
+        "answer": "const fs = require(\"fs/promises\");\nasync function writeMany() {\n await fs.writeFile(\"a.txt\", \"1\");\n await fs.writeFile(\"a.txt\", \"2\");\n}\nwriteMany();"
+      },
+      {
+        "id": 5,
+        "question": "const input = location.search.slice(1);\ndocument.body.innerHTML = \"<h1>\" + input + \"</h1>\";",
+        "answer": "const input = location.search.slice(1);\ndocument.body.textContent = input;"
+      }
+    ]
+  }
+}

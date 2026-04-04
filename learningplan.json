@@ -1,0 +1,159 @@
+{
+  "source": "MDN Web Docs",
+  "roadmap": [
+    {
+      "theme": "Grammar and Types",
+      "topics": [
+        "Variables (let, const, var)",
+        "Data types and structures",
+        "Type conversion",
+        "Literals"
+      ]
+    },
+    {
+      "theme": "Expressions and Operators",
+      "topics": [
+        "Arithmetic operators",
+        "Comparison operators",
+        "Logical operators",
+        "Operator precedence"
+      ]
+    },
+    {
+      "theme": "Control Flow and Error Handling",
+      "topics": [
+        "if...else",
+        "switch",
+        "Loops (for, while, do...while)",
+        "try...catch",
+        "Error objects"
+      ]
+    },
+    {
+      "theme": "Functions",
+      "topics": [
+        "Function declarations and expressions",
+        "Arrow functions",
+        "Closures",
+        "Recursion",
+        "Parameters and return values"
+      ]
+    },
+    {
+      "theme": "Objects and Prototypes",
+      "topics": [
+        "Object basics",
+        "Prototypes",
+        "Inheritance",
+        "Classes",
+        "this keyword"
+      ]
+    },
+    {
+      "theme": "Arrays and Collections",
+      "topics": [
+        "Arrays",
+        "Array methods (map, filter, reduce)",
+        "Map",
+        "Set"
+      ]
+    },
+    {
+      "theme": "Iterators and Generators",
+      "topics": [
+        "Iteration protocols",
+        "for...of loop",
+        "Generators"
+      ]
+    },
+    {
+      "theme": "Modules",
+      "topics": [
+        "ES Modules",
+        "import/export",
+        "Module scope",
+        "Dynamic imports"
+      ]
+    },
+    {
+      "theme": "Standard Built-in Objects",
+      "topics": [
+        "String",
+        "Number",
+        "Math",
+        "Date",
+        "JSON",
+        "RegExp"
+      ]
+    },
+    {
+      "theme": "Asynchronous JavaScript",
+      "topics": [
+        "Callbacks",
+        "Promises",
+        "async/await",
+        "Event loop"
+      ]
+    },
+    {
+      "theme": "Web APIs",
+      "topics": [
+        "DOM API",
+        "Fetch API",
+        "Web Storage API",
+        "Timers (setTimeout, setInterval)"
+      ]
+    },
+    {
+      "theme": "Working with the DOM",
+      "topics": [
+        "Selecting elements",
+        "Modifying content",
+        "Styling elements",
+        "Event handling",
+        "Event delegation"
+      ]
+    },
+    {
+      "theme": "Client-Side Storage",
+      "topics": [
+        "localStorage",
+        "sessionStorage",
+        "IndexedDB (intro)"
+      ]
+    },
+    {
+      "theme": "Debugging and Tools",
+      "topics": [
+        "JavaScript console",
+        "Debugging techniques",
+        "Browser DevTools"
+      ]
+    },
+    {
+      "theme": "Performance and Best Practices",
+      "topics": [
+        "Efficient coding",
+        "Minimizing DOM operations",
+        "Code organization"
+      ]
+    },
+    {
+      "theme": "Security",
+      "topics": [
+        "Same-origin policy",
+        "XSS basics",
+        "Secure coding practices"
+      ]
+    },
+    {
+      "theme": "Advanced JavaScript",
+      "topics": [
+        "Event loop deep dive",
+        "Memory management",
+        "Execution context",
+        "Closures in depth"
+      ]
+    }
+  ]
+}

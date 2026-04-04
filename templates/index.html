@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<<<<<<< HEAD
   <meta charset="UTF-8">
   <title>Learn JS</title>
   <link rel="stylesheet" href="static/css/style.css">
@@ -17,5 +18,177 @@
 
 <script src="static/js/script.js"></script>
 
+=======
+  <meta charset="UTF-8" />
+  <title>Learn JavaScript</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/static/css/style.css?v=10" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button id="newChatBtn" class="new-chat-btn">+ Новый чат</button>
+      </div>
+
+      <div id="chatList" class="chat-list"></div>
+    </aside>
+
+    <main class="main-content empty-state" id="mainContent">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="sidebarToggle" class="icon-btn" title="Скрыть/показать панель" type="button"></button>
+          <span id="chatTitle" class="chat-title-header">Новый чат</span>
+        </div>
+
+        <button id="themeToggle" class="icon-btn" title="Сменить тему" type="button"></button>
+      </header>
+
+      <section class="chat-area" id="chatArea">
+        <div class="chat-inner">
+          <div id="welcomeScreen" class="welcome-screen">
+            <h1>Чем помочь?</h1>
+            <p>Задайте вопрос по JavaScript, попросите объяснить код или помочь с задачей.</p>
+          </div>
+
+          <div id="messages" class="messages"></div>
+        </div>
+      </section>
+
+      <footer class="input-area">
+        <form id="inputForm" class="input-form">
+          <textarea
+            id="queryInput"
+            placeholder="Спросите что-нибудь..."
+            autocomplete="off"
+            rows="1"
+          ></textarea>
+          <button type="submit" id="sendBtn" aria-label="Отправить сообщение"></button>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <div id="renameModal" class="modal-overlay hidden">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="renameModalTitle">
+      <div class="modal-header">
+        <h2 id="renameModalTitle">Переименовать чат</h2>
+        <button id="renameCloseBtn" class="modal-close-btn" type="button" aria-label="Закрыть">✕</button>
+      </div>
+
+      <form id="renameForm" class="modal-form">
+        <input
+          id="renameInput"
+          class="modal-input"
+          type="text"
+          placeholder="Введите название чата"
+          maxlength="120"
+          autocomplete="off"
+        />
+
+        <div class="modal-actions">
+          <button type="button" id="renameCancelBtn" class="modal-btn secondary">Отмена</button>
+          <button type="submit" class="modal-btn primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="chatContextMenu" class="chat-context-menu hidden">
+    <button id="contextRenameBtn" class="chat-context-menu-item" type="button"></button>
+    <button id="contextDeleteBtn" class="chat-context-menu-item delete" type="button"></button>
+  </div>
+
+  <div id="surveyModal" class="modal-overlay hidden">
+    <div
+      class="modal-card survey-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="surveyModalTitle"
+    >
+      <div class="modal-header survey-header">
+        <div>
+          <h2 id="surveyModalTitle">Перед началом расскажите о вашем уровне JavaScript</h2>
+          <p class="survey-subtitle">
+            Это поможет подобрать подходящий формат обучения.
+          </p>
+        </div>
+      </div>
+
+      <div class="survey-content">
+        <div class="survey-section">
+          <div class="survey-section-title">Ваш уровень</div>
+
+          <div class="level-options" id="levelOptions">
+            <button
+              type="button"
+              class="level-card"
+              data-level="beginner"
+              id="levelBeginnerBtn"
+            >
+              <span class="level-card-title">Ничего не знаю</span>
+              <span class="level-card-text">
+                Начнём с самых основ, без выбора тем.
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="level-card"
+              data-level="returning"
+              id="levelReturningBtn"
+            >
+              <span class="level-card-title">Учил раньше</span>
+              <span class="level-card-text">
+                Покажем список тем, чтобы вы могли отметить знакомые направления.
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div id="topicsSection" class="survey-section hidden">
+          <div class="survey-section-title">Какие темы вам уже знакомы?</div>
+          <p class="survey-note">
+            Можно выбрать несколько. Пока это только визуальная оболочка.
+          </p>
+
+          <div id="topicsGrid" class="topics-grid">
+            <button type="button" class="topic-chip" data-topic="variables">Переменные и типы данных</button>
+            <button type="button" class="topic-chip" data-topic="operators">Операторы</button>
+            <button type="button" class="topic-chip" data-topic="conditions">Условия</button>
+            <button type="button" class="topic-chip" data-topic="loops">Циклы</button>
+            <button type="button" class="topic-chip" data-topic="functions">Функции</button>
+            <button type="button" class="topic-chip" data-topic="arrays">Массивы</button>
+            <button type="button" class="topic-chip" data-topic="objects">Объекты</button>
+            <button type="button" class="topic-chip" data-topic="strings">Строки</button>
+            <button type="button" class="topic-chip" data-topic="dom">DOM</button>
+            <button type="button" class="topic-chip" data-topic="events">События</button>
+            <button type="button" class="topic-chip" data-topic="async">Async / Await</button>
+            <button type="button" class="topic-chip" data-topic="api">Fetch / API</button>
+          </div>
+        </div>
+
+        <div class="modal-actions survey-actions">
+          <button type="button" id="surveyContinueBtn" class="modal-btn primary" disabled>
+            Продолжить
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script type="module" src="/static/js/script.js?v=10"></script>
+>>>>>>> 45c438a4eb640a159f22615895478e85747de630
 </body>
 </html>
