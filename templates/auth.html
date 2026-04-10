@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация - JavaScript Chat</title>
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-tabs" id="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Вход</button>
+                <button class="auth-tab" data-tab="register">Регистрация</button>
+                <button class="auth-tab" data-tab="reset">Сброс пароля</button>
+            </div>
+
+            <div class="auth-form-container">
+                <!-- Форма входа -->
+                <div class="auth-form active" id="login-form">
+                    <form id="login-form-element">
+                        <div class="auth-form-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" required placeholder="example@mail.com">
+                        </div>
+                        <div class="auth-form-group">
+                            <label for="login-password">Пароль</label>
+                            <input type="password" id="login-password" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="auth-submit-btn">
+                            <span class="button-text">Войти</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Форма регистрации -->
+                <div class="auth-form" id="register-form">
+                    <form id="register-form-element">
+                        <div class="auth-form-group">
+                            <label for="register-email">Email</label>
+                            <input type="email" id="register-email" required placeholder="example@mail.com">
+                        </div>
+                        <div class="auth-form-group">
+                            <label for="register-password">Пароль</label>
+                            <input type="password" id="register-password" required placeholder="минимум 6 символов">
+                        </div>
+                        <button type="submit" class="auth-submit-btn">
+                            <span class="button-text">Зарегистрироваться</span>
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Сброс пароля -->
+                <div class="auth-form" id="reset-form">
+                    <form id="reset-form-element">
+                        <div class="auth-form-group">
+                            <label for="reset-email">Email</label>
+                            <input type="email" id="reset-email" required placeholder="example@mail.com">
+                        </div>
+                        <div class="auth-form-group">
+                            <label for="reset-new-password">Новый пароль</label>
+                            <input type="password" id="reset-new-password" required placeholder="минимум 6 символов">
+                        </div>
+                        <div class="auth-form-group">
+                            <label for="reset-confirm-password">Подтвердите пароль</label>
+                            <input type="password" id="reset-confirm-password" required placeholder="повторите пароль">
+                        </div>
+                        <button type="submit" class="auth-submit-btn">
+                            <span class="button-text">Сбросить пароль</span>
+                        </button>
+                    </form>
+                    <div class="auth-warning" style="margin-top: 15px; padding: 10px; background: #ffffff; border-radius: 5px; font-size: 12px; color: #856404;">
+                    </div>
+                </div>
+                
+                <!-- Сообщения -->
+                <div id="auth-message" class="auth-message"></div>
+
+                <!-- Информация о пользователе (после входа) -->
+                <div id="user-info" class="hidden">
+                    <div class="auth-user-info">
+                        <div class="auth-welcome-text">Добро пожаловать!</div>
+                        <div class="auth-user-email" id="user-email"></div>
+                        <button onclick="handleLogout()" class="auth-submit-btn auth-logout-btn">
+                            Выйти
+                        </button>
+                        <button onclick="goToChat()" class="auth-submit-btn auth-chat-btn">
+                            Перейти в чат
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+</body>
+</html>

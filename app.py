@@ -4,27 +4,21 @@ import json
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from model import MultiAgentSystem
 
-if os.getenv('VERCEL_ENV') is None:
-    load_dotenv()
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="JavaScript Chat")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-vercel_app = app
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from src.db import User, create_db_and_tables
+from src.schemas import UserCreate, UserRead, UserUpdate
+from src.users import auth_backend, current_active_user, fastapi_users, UserManager, get_user_manager
+
+load_dotenv()
 
 HISTORY_DIR = "history"
 
@@ -34,18 +28,57 @@ except Exception as e:
     print("RAG initiation failed", e)
     rag = None
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):   
+    await create_db_and_tables()   
+    yield
 
-class ChatRequest(BaseModel):
-    messages: list[dict[str, str]]
 
+app = FastAPI(title="JavaScript Chat", lifespan=lifespan)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:8000"], # обязательно конкретный хост
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router( 
+fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
+)
+
+app.include_router( 
+fastapi_users.get_register_router(UserRead, UserCreate),  
+prefix="/auth",   
+tags=["auth"],
+)
+
+app.include_router(   
+fastapi_users.get_reset_password_router(),   
+prefix="/auth",   
+tags=["auth"],
+)
+
+app.include_router( 
+fastapi_users.get_verify_router(UserRead), 
+prefix="/auth",  
+tags=["auth"],
+)
+
+app.include_router(
+fastapi_users.get_users_router(UserRead, UserUpdate),
+prefix="/users",  
+tags=["users"],
+)
 
 def ensure_history_dir(directory: str = HISTORY_DIR) -> None:
-    """Гарантирует, что папка истории существует."""
     os.makedirs(directory, exist_ok=True)
 
 
 def get_next_history_number(directory: str = HISTORY_DIR) -> int:
-    """Находит следующий доступный номер для файла истории."""
     ensure_history_dir(directory)
 
     pattern = os.path.join(directory, "history-*.json")
@@ -67,12 +100,38 @@ def get_next_history_number(directory: str = HISTORY_DIR) -> int:
 
 
 def make_history_filepath(session_id: int, directory: str = HISTORY_DIR) -> str:
-    """Формирует путь к файлу истории."""
     ensure_history_dir(directory)
     return os.path.join(directory, f"history-{session_id}.json")
 
+class ChatRequest(BaseModel):
+    messages: list[dict[str, str]]
+
+
+@app.get("/debug-cookies")
+async def debug_cookies(request: Request):
+    """посмотреть все Cookie"""
+    return {
+        "cookies": dict(request.cookies),
+        "headers": dict(request.headers)
+    }
 
 @app.get("/", response_class=HTMLResponse)
+
+async def root(request: Request):
+    """перенаправляет на страницу чата или авторизации"""
+    # получаем Cookie
+    token = request.cookies.get("fastapiusersauth")
+    
+    if token:
+        try:
+            with open("templates/index.html", "r", encoding="utf-8") as f:
+                return f.read()
+        except:
+            return RedirectResponse(url="/auth-page")
+    else:
+        # нет токена - на страницу входа
+        return RedirectResponse(url="/auth-page")
+    
 async def serve_frontend():
     try:
         with open("templates/index.html", "r", encoding="utf-8") as f:
@@ -80,9 +139,24 @@ async def serve_frontend():
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Файл index.html не найден")
 
+@app.get("/auth-page", response_class=HTMLResponse)
+async def serve_auth_page():
+    try:
+        with open("templates/auth.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Файл auth.html не найден")
+    
+
+    
+@app.get("/authenticated-route")
+async def authenticated_route(user: User = Depends(current_active_user)):
+    
+    return {"message": f"Hello {user.email}!"}
+
 
 @app.post("/chat")
-def chat(request: ChatRequest):
+def chat(request: ChatRequest, user: User = Depends(current_active_user)):
     if rag is None:
         raise HTTPException(status_code=500, detail="RAG is down")
 
@@ -98,7 +172,7 @@ def chat(request: ChatRequest):
 
         answer = rag.ask_with_history(request.messages, last_user_message)
 
-        # --- логика сохранения истории в history/ ---
+        # логика сохранения истории в history/
         next_num = get_next_history_number(HISTORY_DIR)
         filepath = make_history_filepath(next_num, HISTORY_DIR)
 
@@ -122,3 +196,27 @@ def chat(request: ChatRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG Error: {str(e)}")
+    
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    new_password: str
+
+@app.post("/auth/simple-reset-password")
+async def simple_reset_password(
+    reset_data: ResetPasswordRequest,
+    user_manager: UserManager = Depends(get_user_manager)
+):
+    """
+    сбрасывает пароль пользователя без подтверждения по email.
+    """
+    try:
+        result = await user_manager.simple_reset_password(
+            email=reset_data.email,
+            new_password=reset_data.new_password
+        )
+        return result
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")

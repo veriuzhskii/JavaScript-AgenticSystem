@@ -537,33 +537,3 @@ input {
   overflow-x: auto;
   white-space: pre-wrap;
 }
-
-/* MOBILE */
-
-@media (max-width: 900px) {
-  .sidebar {
-    width: 220px;
-    min-width: 220px;
-  }
-
-  .chat-area {
-    padding: 0 14px;
-  }
-
-  .input-area {
-    padding: 14px 14px 18px;
-  }
-
-  .welcome-screen h1 {
-    font-size: 32px;
-  }
-
-  .message {
-    max-width: 92%;
-  }
-
-  .chat-inner,
-  .input-form {
-    max-width: 100%;
-  }
-}

@@ -15,6 +15,54 @@
   <link rel="stylesheet" href="/static/css/style.css?v=4" />
 </head>
 <body>
+  <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+      <div id="auth-status"></div>
+  </div>
+
+  <script>
+// проверка авторизации на главной странице (через Cookie)
+async function checkAuthOnMain() {
+    const authStatusDiv = document.getElementById('auth-status');
+    
+    try {
+        const response = await fetch('/users/me', {
+            credentials: 'include'  //   Cookie
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            authStatusDiv.innerHTML = `
+                <div style="background: white; padding: 10px 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <span style="margin-right: 15px;">👤 ${user.email}</span>
+                    <button onclick="logout()" style="padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">Выйти</button>
+                </div>
+            `;
+        } else {
+            authStatusDiv.innerHTML = `<a href="/auth-page" style="background: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; color: #667eea; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">Войти</a>`;
+        }
+    } catch (error) {
+        console.error('Auth check error:', error);
+        authStatusDiv.innerHTML = `<a href="/auth-page" style="background: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; color: #667eea; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">Войти</a>`;
+    }
+}
+
+async function logout() {
+    try {
+        await fetch('/auth/jwt/logout', {
+            method: 'POST',
+            credentials: 'include'  // Cookie
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        window.location.reload();
+    }
+}
+
+// при загрузке страницы
+document.addEventListener('DOMContentLoaded', checkAuthOnMain);
+</script>
+
   <div class="app-container">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">

@@ -8,3 +8,8 @@ __pycache__/
 chroma_data/
 history/
 Q&A.json
+check_users.py
+test.db
+view.py
+testing/
+start_app.py
