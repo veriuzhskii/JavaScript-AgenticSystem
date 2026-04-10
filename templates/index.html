@@ -12,7 +12,9 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=4" />
+  <link rel="stylesheet" href="/static/css/style.css?v=10" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
 </head>
 <body>
   <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
@@ -72,17 +74,17 @@ document.addEventListener('DOMContentLoaded', checkAuthOnMain);
       <div id="chatList" class="chat-list"></div>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content empty-state" id="mainContent">
       <header class="topbar">
         <div class="topbar-left">
-          <button id="sidebarToggle" class="icon-btn" title="Скрыть/показать панель">☰</button>
+          <button id="sidebarToggle" class="icon-btn" title="Скрыть/показать панель" type="button"></button>
           <span id="chatTitle" class="chat-title-header">Новый чат</span>
         </div>
 
-        <button id="themeToggle" class="icon-btn" title="Сменить тему">🌙</button>
+        <button id="themeToggle" class="icon-btn" title="Сменить тему" type="button"></button>
       </header>
 
-      <section class="chat-area">
+      <section class="chat-area" id="chatArea">
         <div class="chat-inner">
           <div id="welcomeScreen" class="welcome-screen">
             <h1>Чем помочь?</h1>
@@ -95,13 +97,13 @@ document.addEventListener('DOMContentLoaded', checkAuthOnMain);
 
       <footer class="input-area">
         <form id="inputForm" class="input-form">
-          <input
+          <textarea
             id="queryInput"
-            type="text"
             placeholder="Спросите что-нибудь..."
             autocomplete="off"
-          />
-          <button type="submit" id="sendBtn">➤</button>
+            rows="1"
+          ></textarea>
+          <button type="submit" id="sendBtn" aria-label="Отправить сообщение"></button>
         </form>
       </footer>
     </main>
@@ -133,15 +135,89 @@ document.addEventListener('DOMContentLoaded', checkAuthOnMain);
   </div>
 
   <div id="chatContextMenu" class="chat-context-menu hidden">
-    <button id="contextRenameBtn" class="chat-context-menu-item">
-      Переименовать
-    </button>
-    <button id="contextDeleteBtn" class="chat-context-menu-item delete">
-      Удалить
-    </button>
+    <button id="contextRenameBtn" class="chat-context-menu-item" type="button"></button>
+    <button id="contextDeleteBtn" class="chat-context-menu-item delete" type="button"></button>
+  </div>
+
+  <div id="surveyModal" class="modal-overlay hidden">
+    <div
+      class="modal-card survey-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="surveyModalTitle"
+    >
+      <div class="modal-header survey-header">
+        <div>
+          <h2 id="surveyModalTitle">Перед началом расскажите о вашем уровне JavaScript</h2>
+          <p class="survey-subtitle">
+            Это поможет подобрать подходящий формат обучения.
+          </p>
+        </div>
+      </div>
+
+      <div class="survey-content">
+        <div class="survey-section">
+          <div class="survey-section-title">Ваш уровень</div>
+
+          <div class="level-options" id="levelOptions">
+            <button
+              type="button"
+              class="level-card"
+              data-level="beginner"
+              id="levelBeginnerBtn"
+            >
+              <span class="level-card-title">Ничего не знаю</span>
+              <span class="level-card-text">
+                Начнём с самых основ, без выбора тем.
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="level-card"
+              data-level="returning"
+              id="levelReturningBtn"
+            >
+              <span class="level-card-title">Учил раньше</span>
+              <span class="level-card-text">
+                Покажем список тем, чтобы вы могли отметить знакомые направления.
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div id="topicsSection" class="survey-section hidden">
+          <div class="survey-section-title">Какие темы вам уже знакомы?</div>
+          <p class="survey-note">
+            Можно выбрать несколько. Пока это только визуальная оболочка.
+          </p>
+
+          <div id="topicsGrid" class="topics-grid">
+            <button type="button" class="topic-chip" data-topic="variables">Переменные и типы данных</button>
+            <button type="button" class="topic-chip" data-topic="operators">Операторы</button>
+            <button type="button" class="topic-chip" data-topic="conditions">Условия</button>
+            <button type="button" class="topic-chip" data-topic="loops">Циклы</button>
+            <button type="button" class="topic-chip" data-topic="functions">Функции</button>
+            <button type="button" class="topic-chip" data-topic="arrays">Массивы</button>
+            <button type="button" class="topic-chip" data-topic="objects">Объекты</button>
+            <button type="button" class="topic-chip" data-topic="strings">Строки</button>
+            <button type="button" class="topic-chip" data-topic="dom">DOM</button>
+            <button type="button" class="topic-chip" data-topic="events">События</button>
+            <button type="button" class="topic-chip" data-topic="async">Async / Await</button>
+            <button type="button" class="topic-chip" data-topic="api">Fetch / API</button>
+          </div>
+        </div>
+
+        <div class="modal-actions survey-actions">
+          <button type="button" id="surveyContinueBtn" class="modal-btn primary" disabled>
+            Продолжить
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="/static/js/script.js?v=4" defer></script>
+  <script type="module" src="/static/js/script.js?v=10"></script>
 </body>
 </html>

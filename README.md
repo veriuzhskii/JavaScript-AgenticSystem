@@ -11,7 +11,7 @@ The system consists of the following agents:
 These agents collaborate to create an interactive and efficient learning experience.
 
 # How to Use
-*Python 3.13*
+*Python 3.12.10*
 
 1. Clone the repository
 
@@ -49,5 +49,24 @@ Open the link provided in the terminal to access the chat interface.
 
 - **Error: "ModuleNotFoundError"**  
   Ensure all dependencies are installed by running `pip install -r requirements.txt`.
+
 - **Error: "Invalid API Key"**  
   Double-check your `.env` file and ensure the `GROQ_API_KEY` is correct.
+
+- **To invoke the onboarding quiz again**
+  
+  Open DevTools → Console and run:
+  ```
+  localStorage.removeItem("js_onboarding_state");
+  location.reload();
+  ```
+
+- ⚠️ **FULL RESET**
+
+  **WARNING**! this removes **ALL** stored data, including, including: chats, theme, etc.
+
+  Open DevTools → Console and run:
+  ```
+  localStorage.clear();
+  location.reload();
+  ```
