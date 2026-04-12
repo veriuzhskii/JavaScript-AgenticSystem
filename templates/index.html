@@ -12,53 +12,69 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=10" />
+  <link rel="stylesheet" href="/static/css/style.css?v=14" />
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-
 </head>
 <body>
-  <div class="app-container">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <button id="newChatBtn" class="new-chat-btn">+ Новый чат</button>
-      </div>
-
-      <div id="chatList" class="chat-list"></div>
-    </aside>
-
-    <main class="main-content empty-state" id="mainContent">
-      <header class="topbar">
-        <div class="topbar-left">
-          <button id="sidebarToggle" class="icon-btn" title="Скрыть/показать панель" type="button"></button>
-          <span id="chatTitle" class="chat-title-header">Новый чат</span>
+  <div id="appShell" class="app-shell">
+    <div class="app-container">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <button id="newChatBtn" class="new-chat-btn">+ Новый чат</button>
         </div>
 
-        <button id="themeToggle" class="icon-btn" title="Сменить тему" type="button"></button>
-      </header>
+        <div id="chatList" class="chat-list"></div>
+      </aside>
 
-      <section class="chat-area" id="chatArea">
-        <div class="chat-inner">
-          <div id="welcomeScreen" class="welcome-screen">
-            <h1>Чем помочь?</h1>
-            <p>Задайте вопрос по JavaScript, попросите объяснить код или помочь с задачей.</p>
+      <main class="main-content empty-state" id="mainContent">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="sidebarToggle" class="icon-btn" title="Скрыть/показать панель" type="button"></button>
+            <span id="chatTitle" class="chat-title-header">Новый чат</span>
           </div>
 
-          <div id="messages" class="messages"></div>
-        </div>
-      </section>
+          <div class="topbar-actions">
+            <button id="themeToggle" class="icon-btn" title="Сменить тему" type="button"></button>
 
-      <footer class="input-area">
-        <form id="inputForm" class="input-form">
-          <textarea
-            id="queryInput"
-            placeholder="Спросите что-нибудь..."
-            autocomplete="off"
-            rows="1"
-          ></textarea>
-          <button type="submit" id="sendBtn" aria-label="Отправить сообщение"></button>
-        </form>
-      </footer>
-    </main>
+            <div class="user-menu-wrapper">
+              <button id="userMenuBtn" class="icon-btn user-menu-btn hidden" title="Профиль" type="button"></button>
+
+                            <div id="userDropdown" class="user-dropdown hidden">
+                <div class="user-dropdown-email" id="userDropdownEmail"></div>
+                <button id="topicsDropdownBtn" class="user-dropdown-secondary" type="button">Темы</button>
+                <button id="devResetSurveyBtn" class="user-dropdown-secondary hidden" type="button">
+                  Dev reset опросника
+                </button>
+                <button id="logoutBtn" class="user-dropdown-logout" type="button">Выйти</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="chat-area" id="chatArea">
+          <div class="chat-inner">
+            <div id="welcomeScreen" class="welcome-screen">
+              <h1>Чем помочь?</h1>
+              <p>Задайте вопрос по JavaScript, попросите объяснить код или помочь с задачей.</p>
+            </div>
+
+            <div id="messages" class="messages"></div>
+          </div>
+        </section>
+
+        <footer class="input-area">
+          <form id="inputForm" class="input-form">
+            <textarea
+              id="queryInput"
+              placeholder="Спросите что-нибудь..."
+              autocomplete="off"
+              rows="1"
+            ></textarea>
+            <button type="submit" id="sendBtn" aria-label="Отправить сообщение"></button>
+          </form>
+        </footer>
+      </main>
+    </div>
   </div>
 
   <div id="renameModal" class="modal-overlay hidden">
@@ -141,7 +157,7 @@
         <div id="topicsSection" class="survey-section hidden">
           <div class="survey-section-title">Какие темы вам уже знакомы?</div>
           <p class="survey-note">
-            Можно выбрать несколько. Пока это только визуальная оболочка.
+            Можно выбрать несколько.
           </p>
 
           <div id="topicsGrid" class="topics-grid">
@@ -169,7 +185,142 @@
     </div>
   </div>
 
+  <div id="topicsModal" class="modal-overlay hidden">
+    <div class="modal-card topics-manager-card" role="dialog" aria-modal="true" aria-labelledby="topicsManagerTitle">
+      <div class="modal-header">
+        <h2 id="topicsManagerTitle">Темы</h2>
+        <button id="topicsCloseBtn" class="modal-close-btn" type="button" aria-label="Закрыть">✕</button>
+      </div>
+      <div id="topicsManagerGrid" class="topics-manager-grid"></div>
+    </div>
+  </div>
+
+  <div id="authOverlay" class="auth-overlay hidden">
+    <div class="auth-backdrop"></div>
+
+    <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div class="auth-modal-header">
+        <div style="text-align: center;">
+          <h2 id="authModalTitle">Добро пожаловать</h2>
+        </div>
+      </div>
+
+      <div class="auth-tabs" id="authTabs">
+        <button class="auth-tab active" data-auth-tab="login" type="button">Вход</button>
+        <button class="auth-tab" data-auth-tab="register" type="button">Регистрация</button>
+      </div>
+
+      <form id="loginAuthForm" class="auth-form auth-form-active">
+        <div class="auth-field">
+          <label for="loginEmail">Email</label>
+          <input
+            id="loginEmail"
+            name="username"
+            type="email"
+            autocomplete="username"
+            placeholder="example@email.com"
+            required
+          />
+        </div>
+
+        <div class="auth-field">
+          <label for="loginPassword">Пароль</label>
+          <input
+            id="loginPassword"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+
+        <button id="forgotPasswordBtn" type="button" class="auth-inline-link">
+          Сбросить пароль
+        </button>
+
+        <button type="submit" class="auth-submit-btn auth-submit-btn-login">
+          <span class="button-text">Войти</span>
+        </button>
+      </form>
+
+      <form id="registerAuthForm" class="auth-form hidden">
+        <div class="auth-field">
+          <label for="registerEmail">Email</label>
+          <input
+            id="registerEmail"
+            name="username"
+            type="email"
+            autocomplete="username"
+            placeholder="example@email.com"
+            required
+          />
+        </div>
+
+        <div class="auth-field">
+          <label for="registerPassword">Пароль</label>
+          <input
+            id="registerPassword"
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Минимум 6 символов"
+            required
+          />
+        </div>
+
+        <button type="submit" class="auth-submit-btn auth-submit-btn-login">
+          <span class="button-text">Зарегистрироваться</span>
+        </button>
+      </form>
+
+      <form id="resetAuthForm" class="auth-form hidden">
+        <div class="auth-field">
+          <label for="resetEmail">Email</label>
+          <input
+            id="resetEmail"
+            name="username"
+            type="email"
+            autocomplete="username"
+            placeholder="example@email.com"
+            required
+          />
+        </div>
+
+        <div class="auth-field">
+          <label for="resetNewPassword">Новый пароль</label>
+          <input
+            id="resetNewPassword"
+            name="new-password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Минимум 6 символов"
+            required
+          />
+        </div>
+
+        <div class="auth-field">
+          <label for="resetConfirmPassword">Подтвердите пароль</label>
+          <input
+            id="resetConfirmPassword"
+            name="confirm-password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Повторите пароль"
+            required
+          />
+        </div>
+
+        <button type="submit" class="auth-submit-btn auth-submit-btn-login">
+          <span class="button-text">Сбросить пароль</span>
+        </button>
+      </form>
+
+      <div id="authMessage" class="auth-message hidden"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script type="module" src="/static/js/script.js?v=10"></script>
+  <script type="module" src="/static/js/script.js?v=14"></script>
 </body>
 </html>
