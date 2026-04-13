@@ -6,21 +6,37 @@ from typing import Any, Dict, List
 from uuid import uuid4
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from model import MultiAgentSystem
+from src.db import (
+    Topic,
+    User,
+    UserTopic,
+    create_db_and_tables,
+    get_async_session,
+    seed_topics,
+)
+from src.schemas import UserCreate, UserRead
+from src.users import auth_backend, current_active_user, fastapi_users, get_user_manager
 
 load_dotenv()
 
 app = FastAPI(title="JavaScript Chat")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,7 +61,45 @@ class RenameChatRequest(BaseModel):
     title: str
 
 
-def ensure_history_dir(directory: str = HISTORY_DIR) -> None:
+class ResetPasswordRequest(BaseModel):
+    email: str
+    new_password: str
+
+
+class TopicRead(BaseModel):
+    key: str
+    title: str
+
+
+class UserTopicsResponse(BaseModel):
+    topics: List[TopicRead]
+    learned_topic_keys: List[str]
+
+
+class UpdateUserTopicsRequest(BaseModel):
+    topic_keys: List[str] = Field(default_factory=list)
+
+
+@app.on_event("startup")
+async def on_startup():
+    await create_db_and_tables()
+    await seed_topics()
+
+
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+
+
+def ensure_history_dir(directory: str) -> None:
     os.makedirs(directory, exist_ok=True)
 
 
@@ -60,7 +114,13 @@ def sanitize_chat_title(title: str) -> str:
     return clean[:80]
 
 
-def make_chat_filepath(chat_id: str, directory: str = HISTORY_DIR) -> str:
+def make_user_history_dir(user_id: str, root_directory: str = HISTORY_DIR) -> str:
+    directory = os.path.join(root_directory, user_id)
+    ensure_history_dir(directory)
+    return directory
+
+
+def make_chat_filepath(chat_id: str, directory: str) -> str:
     ensure_history_dir(directory)
     return os.path.join(directory, f"{chat_id}.json")
 
@@ -76,7 +136,7 @@ def build_empty_chat(chat_id: str) -> Dict[str, Any]:
     }
 
 
-def load_chat(chat_id: str, directory: str = HISTORY_DIR) -> Dict[str, Any]:
+def load_chat(chat_id: str, directory: str) -> Dict[str, Any]:
     filepath = make_chat_filepath(chat_id, directory)
 
     if not os.path.exists(filepath):
@@ -94,7 +154,7 @@ def load_chat(chat_id: str, directory: str = HISTORY_DIR) -> Dict[str, Any]:
     }
 
 
-def save_chat(chat_data: Dict[str, Any], directory: str = HISTORY_DIR) -> None:
+def save_chat(chat_data: Dict[str, Any], directory: str) -> None:
     ensure_history_dir(directory)
     filepath = make_chat_filepath(chat_data["chat_id"], directory)
 
@@ -102,7 +162,7 @@ def save_chat(chat_data: Dict[str, Any], directory: str = HISTORY_DIR) -> None:
         json.dump(chat_data, f, ensure_ascii=False, indent=4)
 
 
-def list_chat_summaries(directory: str = HISTORY_DIR) -> List[Dict[str, Any]]:
+def list_chat_summaries(directory: str) -> List[Dict[str, Any]]:
     ensure_history_dir(directory)
 
     chats: List[Dict[str, Any]] = []
@@ -150,28 +210,106 @@ async def serve_frontend():
         raise HTTPException(status_code=404, detail="Файл index.html не найден")
 
 
+@app.get("/users/me", response_model=UserRead)
+async def get_me(user: User = Depends(current_active_user)):
+    return user
+
+
+@app.post("/auth/simple-reset-password")
+async def simple_reset_password(
+    request: ResetPasswordRequest,
+    user_manager=Depends(get_user_manager),
+):
+    return await user_manager.simple_reset_password(
+        email=request.email,
+        new_password=request.new_password,
+    )
+
+
+@app.get("/topics", response_model=UserTopicsResponse)
+async def get_topics(
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    topics_result = await session.execute(select(Topic).order_by(Topic.title))
+    topics = topics_result.scalars().all()
+
+    learned_result = await session.execute(
+        select(UserTopic.topic_key).where(UserTopic.user_id == user.id)
+    )
+    learned_topic_keys = list(learned_result.scalars().all())
+
+    return UserTopicsResponse(
+        topics=[TopicRead(key=topic.key, title=topic.title) for topic in topics],
+        learned_topic_keys=learned_topic_keys,
+    )
+
+
+@app.put("/topics/me", response_model=UserTopicsResponse)
+async def update_my_topics(
+    request: UpdateUserTopicsRequest,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    requested_keys = list(dict.fromkeys(request.topic_keys))
+
+    existing_topics_result = await session.execute(select(Topic.key))
+    existing_topic_keys = set(existing_topics_result.scalars().all())
+
+    invalid_keys = [key for key in requested_keys if key not in existing_topic_keys]
+    if invalid_keys:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Неизвестные темы: {', '.join(invalid_keys)}",
+        )
+
+    await session.execute(delete(UserTopic).where(UserTopic.user_id == user.id))
+
+    for topic_key in requested_keys:
+        session.add(UserTopic(user_id=user.id, topic_key=topic_key))
+
+    await session.commit()
+
+    topics_result = await session.execute(select(Topic).order_by(Topic.title))
+    topics = topics_result.scalars().all()
+
+    return UserTopicsResponse(
+        topics=[TopicRead(key=topic.key, title=topic.title) for topic in topics],
+        learned_topic_keys=requested_keys,
+    )
+
+
 @app.get("/chats")
-def get_chats():
-    return {"chats": list_chat_summaries(HISTORY_DIR)}
+def get_chats(user: User = Depends(current_active_user)):
+    user_history_dir = make_user_history_dir(str(user.id))
+    return {"chats": list_chat_summaries(user_history_dir)}
 
 
 @app.get("/chats/{chat_id}")
-def get_chat(chat_id: str):
-    filepath = make_chat_filepath(chat_id, HISTORY_DIR)
+def get_chat(chat_id: str, user: User = Depends(current_active_user)):
+    user_history_dir = make_user_history_dir(str(user.id))
+    filepath = make_chat_filepath(chat_id, user_history_dir)
+
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Чат не найден")
 
-    chat = load_chat(chat_id, HISTORY_DIR)
+    chat = load_chat(chat_id, user_history_dir)
     return chat
 
 
 @app.patch("/chats/{chat_id}/title")
-def rename_chat(chat_id: str, request: RenameChatRequest):
-    filepath = make_chat_filepath(chat_id, HISTORY_DIR)
+def rename_chat(
+    chat_id: str,
+    request: RenameChatRequest,
+    user: User = Depends(current_active_user),
+):
+    user_history_dir = make_user_history_dir(str(user.id))
+    filepath = make_chat_filepath(chat_id, user_history_dir)
+
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Чат не найден")
 
-    chat = load_chat(chat_id, HISTORY_DIR)
+    chat = load_chat(chat_id, user_history_dir)
     new_title = sanitize_chat_title(request.title)
 
     if not new_title:
@@ -179,14 +317,15 @@ def rename_chat(chat_id: str, request: RenameChatRequest):
 
     chat["title"] = new_title
     chat["updated_at"] = utc_now_iso()
-    save_chat(chat, HISTORY_DIR)
+    save_chat(chat, user_history_dir)
 
     return chat
 
 
 @app.delete("/chats/{chat_id}")
-def delete_chat(chat_id: str):
-    filepath = make_chat_filepath(chat_id, HISTORY_DIR)
+def delete_chat(chat_id: str, user: User = Depends(current_active_user)):
+    user_history_dir = make_user_history_dir(str(user.id))
+    filepath = make_chat_filepath(chat_id, user_history_dir)
 
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Чат не найден")
@@ -196,7 +335,7 @@ def delete_chat(chat_id: str):
 
 
 @app.post("/chat")
-def chat(request: ChatRequest):
+def chat(request: ChatRequest, user: User = Depends(current_active_user)):
     if rag is None:
         raise HTTPException(status_code=500, detail="RAG is down")
 
@@ -213,6 +352,8 @@ def chat(request: ChatRequest):
 
         answer = rag.ask_with_history(request.messages, last_user_message)
 
+        user_history_dir = make_user_history_dir(str(user.id))
+
         chat_id = request.chat_id.strip() if request.chat_id else ""
         is_new_chat = False
 
@@ -221,9 +362,9 @@ def chat(request: ChatRequest):
             chat_data = build_empty_chat(chat_id)
             is_new_chat = True
         else:
-            filepath = make_chat_filepath(chat_id, HISTORY_DIR)
+            filepath = make_chat_filepath(chat_id, user_history_dir)
             if os.path.exists(filepath):
-                chat_data = load_chat(chat_id, HISTORY_DIR)
+                chat_data = load_chat(chat_id, user_history_dir)
             else:
                 chat_data = build_empty_chat(chat_id)
                 is_new_chat = True
@@ -249,7 +390,7 @@ def chat(request: ChatRequest):
         if not chat_data.get("created_at"):
             chat_data["created_at"] = now
 
-        save_chat(chat_data, HISTORY_DIR)
+        save_chat(chat_data, user_history_dir)
 
         return {
             "chat_id": chat_data["chat_id"],

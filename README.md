@@ -11,7 +11,7 @@ The system consists of the following agents:
 These agents collaborate to create an interactive and efficient learning experience.
 
 # How to Use
-*Python 3.13*
+*Python 3.12.10*
 
 1. Clone the repository
 

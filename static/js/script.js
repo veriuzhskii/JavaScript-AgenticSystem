@@ -5,13 +5,21 @@ let currentChatId = localStorage.getItem("currentChatId") || null;
 let renameTargetChatId = null;
 let activeMenuChatId = null;
 let isSending = false;
+let authUser = null;
+let currentAuthView = "login";
 
 const ONBOARDING_STORAGE_KEY = "js_onboarding_state";
+const DEV_FORCE_SURVEY_RESET_KEY = "js_dev_force_survey_reset";
 
 let onboardingState = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY)) || {
   completed: false,
   level: null,
   topics: []
+};
+
+let topicsState = {
+  all: [],
+  learned: []
 };
 
 const chatListEl = document.getElementById("chatList");
@@ -27,6 +35,7 @@ const welcomeScreen = document.getElementById("welcomeScreen");
 const newChatBtn = document.getElementById("newChatBtn");
 const chatArea = document.getElementById("chatArea");
 const mainContent = document.getElementById("mainContent");
+const appShell = document.getElementById("appShell");
 
 const renameModal = document.getElementById("renameModal");
 const renameForm = document.getElementById("renameForm");
@@ -44,6 +53,25 @@ const levelReturningBtn = document.getElementById("levelReturningBtn");
 const topicsSection = document.getElementById("topicsSection");
 const topicsGrid = document.getElementById("topicsGrid");
 const surveyContinueBtn = document.getElementById("surveyContinueBtn");
+
+const userMenuBtn = document.getElementById("userMenuBtn");
+const userDropdown = document.getElementById("userDropdown");
+const userDropdownEmail = document.getElementById("userDropdownEmail");
+const topicsDropdownBtn = document.getElementById("topicsDropdownBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+const topicsModal = document.getElementById("topicsModal");
+const topicsManagerGrid = document.getElementById("topicsManagerGrid");
+const topicsCloseBtn = document.getElementById("topicsCloseBtn");
+const devResetSurveyBtn = document.getElementById("devResetSurveyBtn");
+
+const authOverlay = document.getElementById("authOverlay");
+const authTabs = document.querySelectorAll("[data-auth-tab]");
+const loginAuthForm = document.getElementById("loginAuthForm");
+const registerAuthForm = document.getElementById("registerAuthForm");
+const resetAuthForm = document.getElementById("resetAuthForm");
+const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
+const authMessage = document.getElementById("authMessage");
 
 const DRAFT_CHAT_ID = "__draft__";
 const MAX_TEXTAREA_HEIGHT = 220;
@@ -74,6 +102,7 @@ const thinkingState = {
 ========================= */
 async function api(path, options = {}) {
   const response = await fetch(path, {
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {})
@@ -82,6 +111,11 @@ async function api(path, options = {}) {
   });
 
   const data = await response.json().catch(() => ({}));
+
+  if (response.status === 401) {
+    setUnauthorizedState();
+    throw new Error("Требуется авторизация");
+  }
 
   if (!response.ok) {
     throw new Error(data.detail || "Ошибка запроса к серверу");
@@ -160,6 +194,356 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function showAuthMessage(text, type = "error") {
+  authMessage.textContent = text;
+  authMessage.className = `auth-message ${type}`;
+  authMessage.classList.remove("hidden");
+}
+
+function hideAuthMessage() {
+  authMessage.textContent = "";
+  authMessage.className = "auth-message hidden";
+}
+
+function isDevEnvironment() {
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1";
+}
+
+function shouldForceSurveyReset() {
+  return localStorage.getItem(DEV_FORCE_SURVEY_RESET_KEY) === "1";
+}
+
+function setDevResetButtonVisibility() {
+  if (!devResetSurveyBtn) return;
+  devResetSurveyBtn.classList.toggle("hidden", !isDevEnvironment() || !authUser);
+}
+
+function resetSurveyForDev() {
+  if (!isDevEnvironment()) return;
+
+  onboardingState = {
+    completed: false,
+    level: null,
+    topics: []
+  };
+
+  saveOnboardingState();
+  localStorage.setItem(DEV_FORCE_SURVEY_RESET_KEY, "1");
+
+  userDropdown.classList.add("hidden");
+  updateSurveyUI();
+  updateChatAvailability();
+  openSurveyModal();
+}
+
+function setAuthView(view) {
+  currentAuthView = view;
+  hideAuthMessage();
+
+  authTabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.authTab === view);
+  });
+
+  loginAuthForm.classList.toggle("hidden", view !== "login");
+  registerAuthForm.classList.toggle("hidden", view !== "register");
+  resetAuthForm.classList.toggle("hidden", view !== "reset");
+
+  loginAuthForm.classList.toggle("auth-form-active", view === "login");
+  registerAuthForm.classList.toggle("auth-form-active", view === "register");
+  resetAuthForm.classList.toggle("auth-form-active", view === "reset");
+}
+
+function openAuthOverlay(defaultView = "login") {
+  authOverlay.classList.remove("hidden");
+  appShell.classList.add("auth-locked");
+  setAuthView(defaultView);
+}
+
+function closeAuthOverlay() {
+  authOverlay.classList.add("hidden");
+  appShell.classList.remove("auth-locked");
+}
+
+function setAuthorizedState(user) {
+  authUser = user;
+  userMenuBtn.classList.remove("hidden");
+  userDropdownEmail.textContent = user.email || "";
+  closeAuthOverlay();
+  setDevResetButtonVisibility();
+  updateChatAvailability();
+}
+
+function setUnauthorizedState() {
+  authUser = null;
+  userDropdown.classList.add("hidden");
+  userMenuBtn.classList.add("hidden");
+  setDevResetButtonVisibility();
+  openAuthOverlay("login");
+  updateChatAvailability();
+}
+
+/* =========================
+   TOPICS
+========================= */
+async function loadTopicsFromServer() {
+  const data = await api("/topics");
+  topicsState.all = Array.isArray(data.topics) ? data.topics : [];
+  topicsState.learned = Array.isArray(data.learned_topic_keys) ? data.learned_topic_keys : [];
+
+  if (shouldForceSurveyReset()) {
+    return;
+  }
+
+  if (topicsState.learned.length > 0) {
+    onboardingState.topics = [...topicsState.learned];
+    onboardingState.completed = true;
+    onboardingState.level = "returning";
+    saveOnboardingState();
+  }
+}
+
+async function saveSurveyTopicsToServer(topicKeys) {
+  const payload = {
+    topic_keys: topicKeys
+  };
+
+  const data = await api("/topics/me", {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+
+  topicsState.learned = Array.isArray(data.learned_topic_keys) ? data.learned_topic_keys : [];
+  onboardingState.topics = [...topicsState.learned];
+  return data;
+}
+
+function openTopicsModal() {
+  renderTopicsManager();
+  topicsModal.classList.remove("hidden");
+}
+
+function closeTopicsModal() {
+  topicsModal.classList.add("hidden");
+}
+
+function renderTopicsManager() {
+  topicsManagerGrid.innerHTML = "";
+
+  for (const topic of topicsState.all) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `topic-status-chip ${topicsState.learned.includes(topic.key) ? "learned" : "not-learned"}`;
+    btn.textContent = topic.title;
+    btn.disabled = true;
+
+    topicsManagerGrid.appendChild(btn);
+  }
+}
+
+/* =========================
+   AUTH
+========================= */
+async function checkAuthOnMain() {
+  try {
+    const response = await fetch("/users/me", {
+      credentials: "include"
+    });
+
+    if (!response.ok) {
+      setUnauthorizedState();
+      return false;
+    }
+
+    const user = await response.json();
+    setAuthorizedState(user);
+    return true;
+  } catch (error) {
+    console.error("Auth check error:", error);
+    setUnauthorizedState();
+    return false;
+  }
+}
+
+async function logout() {
+  const confirmed = window.confirm("Вы точно хотите выйти?");
+  if (!confirmed) return;
+
+  try {
+    await fetch("/auth/jwt/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+  } finally {
+    chats = {};
+    currentChatId = null;
+    topicsState = { all: [], learned: [] };
+    saveCurrentChatId();
+    startDraftChat(false);
+    render();
+    setUnauthorizedState();
+  }
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  hideAuthMessage();
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  const textEl = submitBtn.querySelector(".button-text");
+  const originalText = textEl.textContent;
+
+  textEl.textContent = "Вход...";
+  submitBtn.disabled = true;
+
+  try {
+    const response = await fetch("/auth/jwt/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        username: email,
+        password
+      }),
+      credentials: "include"
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Ошибка входа. Проверьте email и пароль.");
+    }
+
+    const ok = await checkAuthOnMain();
+    if (ok) {
+      await loadTopicsFromServer();
+      await loadChatsFromServer();
+      render();
+    }
+  } catch (error) {
+    showAuthMessage(error.message || "Ошибка входа", "error");
+  } finally {
+    textEl.textContent = originalText;
+    submitBtn.disabled = false;
+  }
+}
+
+async function handleRegisterSubmit(event) {
+  event.preventDefault();
+  hideAuthMessage();
+
+  const email = document.getElementById("registerEmail").value.trim();
+  const password = document.getElementById("registerPassword").value;
+
+  if (password.length < 6) {
+    showAuthMessage("Пароль должен содержать минимум 6 символов", "error");
+    return;
+  }
+
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  const textEl = submitBtn.querySelector(".button-text");
+  const originalText = textEl.textContent;
+
+  textEl.textContent = "Создание...";
+  submitBtn.disabled = true;
+
+  try {
+    const response = await fetch("/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password }),
+      credentials: "include"
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Ошибка регистрации. Возможно, email уже используется.");
+    }
+
+    showAuthMessage("Регистрация успешна. Теперь войдите в аккаунт.", "success");
+    setAuthView("login");
+    document.getElementById("loginEmail").value = email;
+    document.getElementById("registerEmail").value = "";
+    document.getElementById("registerPassword").value = "";
+  } catch (error) {
+    showAuthMessage(error.message || "Ошибка регистрации", "error");
+  } finally {
+    textEl.textContent = originalText;
+    submitBtn.disabled = false;
+  }
+}
+
+async function handleResetSubmit(event) {
+  event.preventDefault();
+  hideAuthMessage();
+
+  const email = document.getElementById("resetEmail").value.trim();
+  const newPassword = document.getElementById("resetNewPassword").value;
+  const confirmPassword = document.getElementById("resetConfirmPassword").value;
+
+  if (newPassword !== confirmPassword) {
+    showAuthMessage("Пароли не совпадают", "error");
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    showAuthMessage("Пароль должен содержать минимум 6 символов", "error");
+    return;
+  }
+
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  const textEl = submitBtn.querySelector(".button-text");
+  const originalText = textEl.textContent;
+
+  textEl.textContent = "Сброс...";
+  submitBtn.disabled = true;
+
+  try {
+    const response = await fetch("/auth/simple-reset-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        new_password: newPassword
+      }),
+      credentials: "include"
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Ошибка сброса пароля");
+    }
+
+    showAuthMessage(`✅ ${data.message}`, "success");
+
+    document.getElementById("resetEmail").value = "";
+    document.getElementById("resetNewPassword").value = "";
+    document.getElementById("resetConfirmPassword").value = "";
+
+    setTimeout(() => {
+      setAuthView("login");
+      showAuthMessage("Теперь вы можете войти с новым паролем", "success");
+    }, 1200);
+  } catch (error) {
+    showAuthMessage(error.message || "Ошибка сброса пароля", "error");
+  } finally {
+    textEl.textContent = originalText;
+    submitBtn.disabled = false;
+  }
 }
 
 /* =========================
@@ -376,6 +760,8 @@ function startAssistantTyping(chatId, messageIndex, fullText) {
 function setupIcons() {
   sidebarToggle.innerHTML = icons.menu;
   sendBtn.innerHTML = icons.send;
+  themeBtn.innerHTML = icons.sun;
+  userMenuBtn.innerHTML = icons.user;
   contextRenameBtn.innerHTML = `${icons.rename} <span>Переименовать</span>`;
   contextDeleteBtn.innerHTML = `${icons.delete} <span>Удалить</span>`;
 }
@@ -398,6 +784,7 @@ themeBtn.addEventListener("click", () => {
 sidebarToggle.addEventListener("click", () => {
   sidebar.classList.toggle("collapsed");
   hideContextMenu();
+  userDropdown.classList.add("hidden");
 });
 
 newChatBtn.addEventListener("click", () => {
@@ -408,16 +795,39 @@ newChatBtn.addEventListener("click", () => {
 });
 
 document.addEventListener("click", (e) => {
-  if (!contextMenu.contains(e.target)) {
+  const clickedInsideContext = contextMenu.contains(e.target);
+  if (!clickedInsideContext) {
     hideContextMenu();
+  }
+
+  const clickedInsideUserMenu =
+    userMenuBtn.contains(e.target) || userDropdown.contains(e.target);
+
+  if (!clickedInsideUserMenu) {
+    userDropdown.classList.add("hidden");
   }
 });
 
-window.addEventListener("resize", hideContextMenu);
-window.addEventListener("scroll", hideContextMenu, true);
+window.addEventListener("resize", () => {
+  hideContextMenu();
+  userDropdown.classList.add("hidden");
+});
+
+window.addEventListener("scroll", () => {
+  hideContextMenu();
+  userDropdown.classList.add("hidden");
+}, true);
 
 renameCloseBtn.addEventListener("click", closeRenameModal);
 renameCancelBtn.addEventListener("click", closeRenameModal);
+
+topicsCloseBtn.addEventListener("click", closeTopicsModal);
+
+topicsModal.addEventListener("click", (e) => {
+  if (e.target === topicsModal) {
+    closeTopicsModal();
+  }
+});
 
 renameModal.addEventListener("click", (e) => {
   if (e.target === renameModal) {
@@ -430,7 +840,11 @@ document.addEventListener("keydown", (e) => {
     if (!renameModal.classList.contains("hidden")) {
       closeRenameModal();
     }
+    if (!topicsModal.classList.contains("hidden")) {
+      closeTopicsModal();
+    }
     hideContextMenu();
+    userDropdown.classList.add("hidden");
   }
 });
 
@@ -444,6 +858,34 @@ input.addEventListener("keydown", (e) => {
     form.requestSubmit();
   }
 });
+
+userMenuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  userDropdown.classList.toggle("hidden");
+});
+
+topicsDropdownBtn.addEventListener("click", () => {
+  userDropdown.classList.add("hidden");
+  openTopicsModal();
+});
+
+devResetSurveyBtn.addEventListener("click", () => {
+  resetSurveyForDev();
+});
+
+logoutBtn.addEventListener("click", logout);
+
+authTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    setAuthView(tab.dataset.authTab);
+  });
+});
+
+forgotPasswordBtn.addEventListener("click", () => setAuthView("reset"));
+
+loginAuthForm.addEventListener("submit", handleLoginSubmit);
+registerAuthForm.addEventListener("submit", handleRegisterSubmit);
+resetAuthForm.addEventListener("submit", handleResetSubmit);
 
 renameForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -503,6 +945,11 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   if (isSending) return;
+
+  if (!authUser) {
+    openAuthOverlay("login");
+    return;
+  }
 
   if (!canUseChat()) {
     openSurveyModal();
@@ -619,14 +1066,30 @@ topicsGrid.addEventListener("click", (e) => {
   updateSurveyUI();
 });
 
-surveyContinueBtn.addEventListener("click", () => {
+surveyContinueBtn.addEventListener("click", async () => {
   if (!onboardingState.level) return;
 
   onboardingState.completed = true;
   saveOnboardingState();
-  closeSurveyModal();
-  updateChatAvailability();
-  input.focus();
+
+  try {
+    if (authUser) {
+      const selectedTopics =
+        onboardingState.level === "returning" ? [...onboardingState.topics] : [];
+
+      await saveSurveyTopicsToServer(selectedTopics);
+      localStorage.removeItem(DEV_FORCE_SURVEY_RESET_KEY);
+    }
+
+    closeSurveyModal();
+    updateChatAvailability();
+
+    if (authUser) {
+      input.focus();
+    }
+  } catch (error) {
+    alert(error.message || "Не удалось сохранить темы");
+  }
 });
 
 function canUseChat() {
@@ -664,13 +1127,18 @@ function updateSurveyUI() {
 }
 
 function updateChatAvailability() {
-  const locked = !canUseChat();
+  const lockedBySurvey = !canUseChat();
+  const lockedByAuth = !authUser;
+  const locked = lockedBySurvey || lockedByAuth;
 
   input.disabled = locked || isSending;
   sendBtn.disabled = locked || isSending;
+  newChatBtn.disabled = lockedByAuth;
   form.classList.toggle("is-locked", locked);
 
-  if (locked) {
+  if (lockedByAuth) {
+    input.placeholder = "Войдите или зарегистрируйтесь, чтобы начать работу";
+  } else if (lockedBySurvey) {
     input.placeholder = "Сначала пройдите опрос перед началом работы";
   } else {
     input.placeholder = "Спросите что-нибудь...";
@@ -985,20 +1453,27 @@ function render() {
    INIT
 ========================= */
 async function init() {
-  try {
-    await loadChatsFromServer();
-  } catch (err) {
-    console.error(err);
-    alert("Не удалось загрузить чаты с сервера.");
+  const isAuthorized = await checkAuthOnMain();
+
+  if (isAuthorized) {
+    try {
+      await loadTopicsFromServer();
+      await loadChatsFromServer();
+    } catch (err) {
+      console.error(err);
+      startDraftChat(false);
+    }
+  } else {
     startDraftChat(false);
   }
 
   render();
   updateSurveyUI();
+  setDevResetButtonVisibility();
   updateChatAvailability();
   autoResizeTextarea();
 
-  if (!canUseChat()) {
+  if (authUser && !canUseChat()) {
     openSurveyModal();
   }
 }
