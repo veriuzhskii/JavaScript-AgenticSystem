@@ -11,6 +11,36 @@ let currentAuthView = "login";
 const ONBOARDING_STORAGE_KEY = "js_onboarding_state";
 const DEV_FORCE_SURVEY_RESET_KEY = "js_dev_force_survey_reset";
 
+const TOPIC_ORDER = [
+  "variables",
+  "operators",
+  "conditions",
+  "loops",
+  "functions",
+  "strings",
+  "arrays",
+  "objects",
+  "dom",
+  "events",
+  "async",
+  "api"
+];
+
+const FALLBACK_TOPICS = [
+  { key: "variables", title: "Переменные и типы данных" },
+  { key: "operators", title: "Операторы" },
+  { key: "conditions", title: "Условия" },
+  { key: "loops", title: "Циклы" },
+  { key: "functions", title: "Функции" },
+  { key: "strings", title: "Строки" },
+  { key: "arrays", title: "Массивы" },
+  { key: "objects", title: "Объекты" },
+  { key: "dom", title: "DOM" },
+  { key: "events", title: "События" },
+  { key: "async", title: "Async / Await" },
+  { key: "api", title: "Fetch / API" }
+];
+
 let onboardingState = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY)) || {
   completed: false,
   level: null,
@@ -18,7 +48,7 @@ let onboardingState = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY)) |
 };
 
 let topicsState = {
-  all: [],
+  all: sortTopicsByLearningOrder([...FALLBACK_TOPICS]),
   learned: []
 };
 
@@ -285,15 +315,72 @@ function setUnauthorizedState() {
   updateChatAvailability();
 }
 
+function sortTopicsByLearningOrder(topics = []) {
+  const orderMap = new Map(TOPIC_ORDER.map((key, index) => [key, index]));
+
+  return [...topics].sort((a, b) => {
+    const aIndex = orderMap.has(a.key) ? orderMap.get(a.key) : Number.MAX_SAFE_INTEGER;
+    const bIndex = orderMap.has(b.key) ? orderMap.get(b.key) : Number.MAX_SAFE_INTEGER;
+    return aIndex - bIndex;
+  });
+}
+
+function getTopicCatalog() {
+  if (Array.isArray(topicsState.all) && topicsState.all.length > 0) {
+    return sortTopicsByLearningOrder(topicsState.all);
+  }
+
+  return sortTopicsByLearningOrder(FALLBACK_TOPICS);
+}
+
+function getTopicMap() {
+  return new Map(getTopicCatalog().map((topic) => [topic.key, topic]));
+}
+
+function normalizeTopicKeys(topicKeys = []) {
+  const validKeys = new Set(getTopicCatalog().map((topic) => topic.key));
+  return [...new Set(topicKeys.filter((key) => validKeys.has(key)))];
+}
+
+function renderSurveyTopicsGrid() {
+  topicsGrid.innerHTML = "";
+
+  const topicCatalog = getTopicCatalog();
+
+  for (const topic of topicCatalog) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "topic-chip";
+    btn.dataset.topic = topic.key;
+    btn.textContent = topic.title;
+
+    if (onboardingState.topics.includes(topic.key)) {
+      btn.classList.add("active");
+    }
+
+    topicsGrid.appendChild(btn);
+  }
+}
+
 /* =========================
    TOPICS
 ========================= */
 async function loadTopicsFromServer() {
   const data = await api("/topics");
-  topicsState.all = Array.isArray(data.topics) ? data.topics : [];
-  topicsState.learned = Array.isArray(data.learned_topic_keys) ? data.learned_topic_keys : [];
+
+  const serverTopics = Array.isArray(data.topics) && data.topics.length > 0
+    ? sortTopicsByLearningOrder(data.topics)
+    : sortTopicsByLearningOrder(FALLBACK_TOPICS);
+
+  topicsState.all = serverTopics;
+  topicsState.learned = Array.isArray(data.learned_topic_keys)
+    ? normalizeTopicKeys(data.learned_topic_keys)
+    : [];
+
+  onboardingState.topics = normalizeTopicKeys(onboardingState.topics);
 
   if (shouldForceSurveyReset()) {
+    renderSurveyTopicsGrid();
     return;
   }
 
@@ -303,11 +390,15 @@ async function loadTopicsFromServer() {
     onboardingState.level = "returning";
     saveOnboardingState();
   }
+
+  renderSurveyTopicsGrid();
 }
 
 async function saveSurveyTopicsToServer(topicKeys) {
+  const normalizedKeys = normalizeTopicKeys(topicKeys);
+
   const payload = {
-    topic_keys: topicKeys
+    topic_keys: normalizedKeys
   };
 
   const data = await api("/topics/me", {
@@ -315,8 +406,16 @@ async function saveSurveyTopicsToServer(topicKeys) {
     body: JSON.stringify(payload)
   });
 
-  topicsState.learned = Array.isArray(data.learned_topic_keys) ? data.learned_topic_keys : [];
+  topicsState.learned = Array.isArray(data.learned_topic_keys)
+    ? normalizeTopicKeys(data.learned_topic_keys)
+    : [];
+
   onboardingState.topics = [...topicsState.learned];
+  saveOnboardingState();
+
+  renderSurveyTopicsGrid();
+  renderTopicsManager();
+
   return data;
 }
 
@@ -332,7 +431,9 @@ function closeTopicsModal() {
 function renderTopicsManager() {
   topicsManagerGrid.innerHTML = "";
 
-  for (const topic of topicsState.all) {
+  const topicCatalog = getTopicCatalog();
+
+  for (const topic of topicCatalog) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = `topic-status-chip ${topicsState.learned.includes(topic.key) ? "learned" : "not-learned"}`;
@@ -381,8 +482,15 @@ async function logout() {
   } finally {
     chats = {};
     currentChatId = null;
-    topicsState = { all: [], learned: [] };
+    topicsState = { all: sortTopicsByLearningOrder([...FALLBACK_TOPICS]), learned: [] };
+    onboardingState = {
+      completed: false,
+      level: null,
+      topics: []
+    };
+    saveOnboardingState();
     saveCurrentChatId();
+    renderSurveyTopicsGrid();
     startDraftChat(false);
     render();
     setUnauthorizedState();
@@ -775,6 +883,7 @@ function applyTheme(theme) {
 applyTheme(localStorage.getItem("theme") || "dark");
 setupIcons();
 resetTextareaHeight();
+renderSurveyTopicsGrid();
 
 themeBtn.addEventListener("click", () => {
   const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -1040,11 +1149,13 @@ form.addEventListener("submit", async (e) => {
 ========================= */
 levelBeginnerBtn.addEventListener("click", () => {
   onboardingState.level = "beginner";
+  onboardingState.topics = [];
   updateSurveyUI();
 });
 
 levelReturningBtn.addEventListener("click", () => {
   onboardingState.level = "returning";
+  onboardingState.topics = normalizeTopicKeys(onboardingState.topics);
   updateSurveyUI();
 });
 
@@ -1063,6 +1174,7 @@ topicsGrid.addEventListener("click", (e) => {
     onboardingState.topics.push(topic);
   }
 
+  onboardingState.topics = normalizeTopicKeys(onboardingState.topics);
   updateSurveyUI();
 });
 
@@ -1070,6 +1182,10 @@ surveyContinueBtn.addEventListener("click", async () => {
   if (!onboardingState.level) return;
 
   onboardingState.completed = true;
+  onboardingState.topics = onboardingState.level === "returning"
+    ? normalizeTopicKeys(onboardingState.topics)
+    : [];
+
   saveOnboardingState();
 
   try {
@@ -1116,6 +1232,8 @@ function updateSurveyUI() {
   levelBeginnerBtn.classList.toggle("active", isBeginner);
   levelReturningBtn.classList.toggle("active", isReturning);
   topicsSection.classList.toggle("hidden", !isReturning);
+
+  renderSurveyTopicsGrid();
 
   const topicButtons = topicsGrid.querySelectorAll(".topic-chip");
   topicButtons.forEach((btn) => {
@@ -1445,6 +1563,7 @@ function render() {
   chatTitleEl.textContent = currentChat?.title || "Новый чат";
 
   renderMessages();
+  renderTopicsManager();
   updateChatAvailability();
   autoResizeTextarea();
 }
@@ -1461,6 +1580,8 @@ async function init() {
       await loadChatsFromServer();
     } catch (err) {
       console.error(err);
+      topicsState.all = sortTopicsByLearningOrder([...FALLBACK_TOPICS]);
+      renderSurveyTopicsGrid();
       startDraftChat(false);
     }
   } else {
