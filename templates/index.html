@@ -12,7 +12,7 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="/static/css/style.css?v=14" />
+  <link rel="stylesheet" href="/static/css/style.css?v=15" />
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 </head>
 <body>
@@ -39,7 +39,7 @@
             <div class="user-menu-wrapper">
               <button id="userMenuBtn" class="icon-btn user-menu-btn hidden" title="Профиль" type="button"></button>
 
-                            <div id="userDropdown" class="user-dropdown hidden">
+              <div id="userDropdown" class="user-dropdown hidden">
                 <div class="user-dropdown-email" id="userDropdownEmail"></div>
                 <button id="topicsDropdownBtn" class="user-dropdown-secondary" type="button">Темы</button>
                 <button id="devResetSurveyBtn" class="user-dropdown-secondary hidden" type="button">
@@ -160,20 +160,7 @@
             Можно выбрать несколько.
           </p>
 
-          <div id="topicsGrid" class="topics-grid">
-            <button type="button" class="topic-chip" data-topic="variables">Переменные и типы данных</button>
-            <button type="button" class="topic-chip" data-topic="operators">Операторы</button>
-            <button type="button" class="topic-chip" data-topic="conditions">Условия</button>
-            <button type="button" class="topic-chip" data-topic="loops">Циклы</button>
-            <button type="button" class="topic-chip" data-topic="functions">Функции</button>
-            <button type="button" class="topic-chip" data-topic="arrays">Массивы</button>
-            <button type="button" class="topic-chip" data-topic="objects">Объекты</button>
-            <button type="button" class="topic-chip" data-topic="strings">Строки</button>
-            <button type="button" class="topic-chip" data-topic="dom">DOM</button>
-            <button type="button" class="topic-chip" data-topic="events">События</button>
-            <button type="button" class="topic-chip" data-topic="async">Async / Await</button>
-            <button type="button" class="topic-chip" data-topic="api">Fetch / API</button>
-          </div>
+          <div id="topicsGrid" class="topics-grid"></div>
         </div>
 
         <div class="modal-actions survey-actions">
@@ -321,6 +308,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script type="module" src="/static/js/script.js?v=14"></script>
+  <script type="module" src="/static/js/script.js?v=15"></script>
 </body>
 </html>
