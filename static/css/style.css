@@ -893,14 +893,12 @@ textarea {
   margin: 8px 0 8px 20px;
 }
 
-/* Убираем только выделение у inline code */
 .message.bot code {
   background: transparent;
   padding: 0;
   border-radius: 0;
 }
 
-/* Возвращаем фон у блока кода целиком */
 .message.bot pre {
   background: rgba(127, 127, 127, 0.12);
   padding: 12px;
@@ -909,7 +907,6 @@ textarea {
   white-space: pre-wrap;
 }
 
-/* Чтобы внутри pre не было отдельного фона у вложенного code */
 .message.bot pre code {
   background: transparent;
   padding: 0;
@@ -1179,34 +1176,6 @@ html[data-theme="light"] .auth-message.success {
   max-width: 720px;
 }
 
-.topics-manager-legend {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.legend-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.legend-learned {
-  background: var(--accent-soft);
-  color: var(--text);
-  border: 1px solid var(--accent);
-}
-
-.legend-not-learned {
-  background: rgba(127, 127, 127, 0.12);
-  color: var(--muted);
-  border: 1px solid var(--border);
-}
-
 .topics-manager-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1218,20 +1187,16 @@ html[data-theme="light"] .auth-message.success {
   border-radius: 14px;
   padding: 14px 16px;
   text-align: left;
-  cursor: pointer;
+  cursor: default;
   font-weight: 600;
-  transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-}
-
-.topic-status-chip:hover {
-  transform: translateY(-1px);
+  transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .topic-status-chip.learned {
-  border: 1px solid var(--accent);
-  background: var(--accent-soft);
+  border: 1px solid #5f8f73;
+  background: rgba(95, 143, 115, 0.16);
   color: var(--text);
-  box-shadow: 0 0 0 1px var(--accent) inset;
+  box-shadow: 0 0 0 1px rgba(95, 143, 115, 0.28) inset;
 }
 
 .topic-status-chip.not-learned {
