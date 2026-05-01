@@ -307,7 +307,31 @@
     </div>
   </div>
 
+  <a
+    id="githubBtn"
+    class="github-fab"
+    href="https://github.com/veriuzhskii/JavaScript-AgenticSystem"
+    target="_blank"
+    rel="noopener noreferrer"
+    title="GitHub репозиторий"
+    aria-label="Открыть GitHub репозиторий"
+  ></a>
+
+  <a
+    href="https://github.com/veriuzhskii/JavaScript-AgenticSystem"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="github-fab"
+    id="githubFab"
+    title="GitHub репозиторий"
+    aria-label="Открыть GitHub репозиторий"
+  ></a>
+
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script type="module" src="/static/js/script.js?v=15"></script>
+  <script type="module">
+    import { icons } from '/static/js/icons.js';
+    document.getElementById('githubFab').innerHTML = icons.github;
+  </script>
 </body>
 </html>

@@ -872,6 +872,8 @@ function setupIcons() {
   userMenuBtn.innerHTML = icons.user;
   contextRenameBtn.innerHTML = `${icons.rename} <span>Переименовать</span>`;
   contextDeleteBtn.innerHTML = `${icons.delete} <span>Удалить</span>`;
+  const githubBtn = document.getElementById("githubBtn");
+  if (githubBtn) githubBtn.innerHTML = icons.github;
 }
 
 function applyTheme(theme) {
