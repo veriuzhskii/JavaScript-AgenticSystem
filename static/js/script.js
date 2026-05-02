@@ -889,16 +889,7 @@ renderSurveyTopicsGrid();
 
 themeBtn.addEventListener("click", () => {
   const currentTheme = document.documentElement.getAttribute("data-theme");
-
-  themeBtn.classList.remove("theme-spin");
-  void themeBtn.offsetWidth; // reflow to restart animation
-  themeBtn.classList.add("theme-spin");
-
   applyTheme(currentTheme === "dark" ? "light" : "dark");
-});
-
-themeBtn.addEventListener("animationend", () => {
-  themeBtn.classList.remove("theme-spin");
 });
 
 sidebarToggle.addEventListener("click", () => {
@@ -1505,6 +1496,36 @@ function renderChatList() {
   }
 }
 
+function addCopyButtons(container) {
+  container.querySelectorAll("pre").forEach((pre) => {
+    if (pre.querySelector(".code-copy-btn")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "code-block-wrapper";
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const btn = document.createElement("button");
+    btn.className = "code-copy-btn";
+    btn.type = "button";
+    btn.title = "Копировать код";
+    btn.innerHTML = icons.copy;
+    wrapper.appendChild(btn);
+
+    btn.addEventListener("click", () => {
+      const code = pre.querySelector("code")?.innerText ?? pre.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.innerHTML = icons.check;
+        btn.classList.add("copied");
+        setTimeout(() => {
+          btn.innerHTML = icons.copy;
+          btn.classList.remove("copied");
+        }, 2000);
+      });
+    });
+  });
+}
+
 function renderMessages() {
   messagesDiv.innerHTML = "";
 
@@ -1540,6 +1561,7 @@ function renderMessages() {
       el.innerHTML = `${safeText}<span class="assistant-typing-caret"></span>`;
     } else if (msg.role === "assistant" && window.marked) {
       el.innerHTML = marked.parse(msg.content);
+      addCopyButtons(el);
     } else {
       el.textContent = msg.content;
     }
