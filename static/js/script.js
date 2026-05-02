@@ -889,7 +889,16 @@ renderSurveyTopicsGrid();
 
 themeBtn.addEventListener("click", () => {
   const currentTheme = document.documentElement.getAttribute("data-theme");
+
+  themeBtn.classList.remove("theme-spin");
+  void themeBtn.offsetWidth;
+  themeBtn.classList.add("theme-spin");
+
   applyTheme(currentTheme === "dark" ? "light" : "dark");
+});
+
+themeBtn.addEventListener("animationend", () => {
+  themeBtn.classList.remove("theme-spin");
 });
 
 sidebarToggle.addEventListener("click", () => {
