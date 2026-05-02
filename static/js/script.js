@@ -207,9 +207,21 @@ function resetTextareaHeight() {
   input.style.overflowY = "hidden";
 }
 
-function scrollMessagesToBottom() {
+const SCROLL_SNAP_THRESHOLD = 80; // px от низа — считаем «у дна»
+
+let userScrolling = false;
+let userScrollingTimer = null;
+
+function isUserNearBottom() {
+  const { scrollTop, scrollHeight, clientHeight } = chatArea;
+  return scrollHeight - scrollTop - clientHeight <= SCROLL_SNAP_THRESHOLD;
+}
+
+function scrollMessagesToBottom(force = false) {
   requestAnimationFrame(() => {
-    chatArea.scrollTop = chatArea.scrollHeight;
+    if (force || (!userScrolling && isUserNearBottom())) {
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
   });
 }
 
@@ -661,7 +673,7 @@ function showThinkingBubble(chatId) {
   thinkingState.chatId = chatId;
   thinkingState.isActive = true;
   render();
-  scrollMessagesToBottom();
+  scrollMessagesToBottom(true);
 }
 
 function hideThinkingBubble() {
@@ -908,6 +920,14 @@ sidebarToggle.addEventListener("click", () => {
   userDropdown.classList.add("hidden");
 });
 
+chatArea.addEventListener("wheel", () => {
+  userScrolling = true;
+  clearTimeout(userScrollingTimer);
+  userScrollingTimer = setTimeout(() => {
+    userScrolling = false;
+  }, 1200);
+}, { passive: true });
+
 newChatBtn.addEventListener("click", () => {
   startDraftChat();
   if (canUseChat()) {
@@ -1097,7 +1117,7 @@ form.addEventListener("submit", async (e) => {
   render();
   setSendingState(true);
   showThinkingBubble(currentChatId);
-  scrollMessagesToBottom();
+  scrollMessagesToBottom(true);
 
   try {
     const previousDraftTitle = currentChat.title || "Новый чат";
@@ -1129,7 +1149,7 @@ form.addEventListener("submit", async (e) => {
     saveCurrentChatId();
 
     render();
-    scrollMessagesToBottom();
+    scrollMessagesToBottom(true);
     maybeAnimateGeneratedTitle(data.chat_id, previousDraftTitle, data.title);
 
     const lastMessageIndex = chats[data.chat_id].messages.length - 1;
@@ -1150,7 +1170,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     render();
-    scrollMessagesToBottom();
+    scrollMessagesToBottom(true);
   } finally {
     setSendingState(false);
   }
@@ -1325,7 +1345,7 @@ async function loadChatById(chatId) {
   currentChatId = chatId;
   saveCurrentChatId();
   render();
-  scrollMessagesToBottom();
+  scrollMessagesToBottom(true);
 }
 
 function startDraftChat(shouldRender = true) {
