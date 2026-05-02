@@ -2628,3 +2628,241 @@ html[data-theme="light"] .auth-message.success {
   color: #4ade80;
   opacity: 1;
 }
+
+/* ── Guide Modal ───────────────────────────────────────────────── */
+.guide-card {
+  max-width: 720px;
+  width: 100%;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.guide-body {
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+  flex: 1;
+}
+
+.guide-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 148px;
+}
+
+.guide-nav-item {
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary, #aaa);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.guide-nav-item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.guide-nav-item.active {
+  background: var(--hover);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.guide-content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  padding-right: 4px;
+}
+
+.guide-section {
+  display: none;
+}
+
+.guide-section.active {
+  display: block;
+}
+
+.guide-section h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.guide-section > p {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary, #aaa);
+}
+
+/* Steps */
+.guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.guide-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.guide-step-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.guide-step div {
+  flex: 1;
+}
+
+.guide-step strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+
+.guide-step p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #aaa);
+}
+
+.guide-list {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #aaa);
+  line-height: 1.7;
+}
+
+/* Concepts (JS basics) */
+.guide-concept {
+  margin-bottom: 18px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg-secondary, rgba(255,255,255,0.04));
+  border: 1px solid var(--border);
+}
+
+.guide-concept-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.guide-concept p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #aaa);
+}
+
+.guide-code {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--code-bg, rgba(0,0,0,0.25));
+  font-size: 12.5px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.guide-code code {
+  font-family: "Fira Code", "Cascadia Code", monospace;
+}
+
+/* Tips grid */
+.guide-tips-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.guide-tip-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg-secondary, rgba(255,255,255,0.04));
+  border: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.guide-tip-icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.guide-tip-card strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.guide-tip-card p {
+  margin: 0;
+  color: var(--text-secondary, #aaa);
+}
+
+/* Step num as emoji */
+.guide-step-num:not(:only-child) {
+  font-size: 16px;
+  background: transparent;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+}
+
+/* ── Guide links & list items ─────────────────────────────────── */
+.guide-link {
+  color: var(--accent, #3b82f6);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.guide-link:hover {
+  border-bottom-color: var(--accent, #3b82f6);
+}
+
+.guide-list {
+  list-style: none;
+  margin: 8px 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-list li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #aaa);
+  padding-left: 0;
+}
+
+.guide-link-bold {
+  font-weight: 700;
+}
