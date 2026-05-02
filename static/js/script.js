@@ -814,6 +814,7 @@ function finalizeAssistantTyping() {
       if (bubble) {
         if (window.marked) {
           bubble.innerHTML = marked.parse(message.content);
+          addCopyButtons(bubble);
         } else {
           bubble.textContent = message.content;
         }
