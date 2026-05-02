@@ -95,6 +95,10 @@ const topicsManagerGrid = document.getElementById("topicsManagerGrid");
 const topicsCloseBtn = document.getElementById("topicsCloseBtn");
 const devResetSurveyBtn = document.getElementById("devResetSurveyBtn");
 
+const guideModal = document.getElementById("guideModal");
+const guideBtn = document.getElementById("guideBtn");
+const guideCloseBtn = document.getElementById("guideCloseBtn");
+
 const authOverlay = document.getElementById("authOverlay");
 const authTabs = document.querySelectorAll("[data-auth-tab]");
 const loginAuthForm = document.getElementById("loginAuthForm");
@@ -882,6 +886,7 @@ function setupIcons() {
   sidebarToggle.innerHTML = icons.menu;
   sendBtn.innerHTML = icons.send;
   themeBtn.innerHTML = icons.sun;
+  guideBtn.innerHTML = icons.help;
   userMenuBtn.innerHTML = icons.user;
   contextRenameBtn.innerHTML = `${icons.rename} <span>Переименовать</span>`;
   contextDeleteBtn.innerHTML = `${icons.delete} <span>Удалить</span>`;
@@ -968,6 +973,33 @@ topicsModal.addEventListener("click", (e) => {
   if (e.target === topicsModal) {
     closeTopicsModal();
   }
+});
+
+// Guide
+guideBtn.addEventListener("click", () => {
+  guideModal.classList.remove("hidden");
+});
+
+guideCloseBtn.addEventListener("click", () => {
+  guideModal.classList.add("hidden");
+});
+
+guideModal.addEventListener("click", (e) => {
+  if (e.target === guideModal) {
+    guideModal.classList.add("hidden");
+  }
+});
+
+document.getElementById("guideNav").addEventListener("click", (e) => {
+  const btn = e.target.closest(".guide-nav-item");
+  if (!btn) return;
+  const key = btn.dataset.guide;
+
+  document.querySelectorAll(".guide-nav-item").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".guide-section").forEach((s) => s.classList.remove("active"));
+
+  btn.classList.add("active");
+  document.querySelector(`.guide-section[data-guide="${key}"]`).classList.add("active");
 });
 
 renameModal.addEventListener("click", (e) => {
