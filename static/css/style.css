@@ -2590,3 +2590,41 @@ html[data-theme="light"] .auth-message.success {
 #themeToggle.theme-spin svg {
   animation: theme-icon-spin 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* ── Code block copy button ─────────────────────────────────── */
+.code-block-wrapper {
+  position: relative;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: var(--bg-secondary, rgba(255,255,255,0.08));
+  color: var(--text-secondary, #aaa);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.code-block-wrapper:hover .code-copy-btn {
+  opacity: 1;
+}
+
+.code-copy-btn:hover {
+  background: var(--bg-hover, rgba(255,255,255,0.15));
+  color: var(--text-primary, #fff);
+}
+
+.code-copy-btn.copied {
+  color: #4ade80;
+  opacity: 1;
+}
