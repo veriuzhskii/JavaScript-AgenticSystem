@@ -34,6 +34,7 @@
           </div>
 
           <div class="topbar-actions">
+            <button id="guideBtn" class="icon-btn" title="Инструкция" type="button"></button>
             <button id="themeToggle" class="icon-btn" title="Сменить тему" type="button"></button>
 
             <div class="user-menu-wrapper">
@@ -326,6 +327,95 @@
     title="GitHub репозиторий"
     aria-label="Открыть GitHub репозиторий"
   ></a>
+
+  <div id="guideModal" class="modal-overlay hidden">
+    <div class="modal-card guide-card" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
+      <div class="modal-header">
+        <h2 id="guideModalTitle">Инструкция по применению</h2>
+        <button id="guideCloseBtn" class="modal-close-btn" type="button" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="guide-body">
+        <nav class="guide-nav" id="guideNav">
+          <button class="guide-nav-item active" data-guide="start" type="button">🚀 С чего начать</button>
+          <button class="guide-nav-item" data-guide="vscode" type="button">🛠 VS Code</button>
+          <button class="guide-nav-item" data-guide="js" type="button">📖 Основы JS</button>
+          <button class="guide-nav-item" data-guide="chat" type="button">💬 Работа с чатом</button>
+          <button class="guide-nav-item" data-guide="tips" type="button">💡 Советы</button>
+        </nav>
+        <div class="guide-content" id="guideContent">
+
+          <section class="guide-section active" data-guide="start">
+            <h3>С чего начать изучение JavaScript?</h3>
+            <p>JavaScript — язык программирования, который работает прямо в браузере. Он нужен для того, чтобы сайты были интерактивными: кнопки нажимались, данные отправлялись, страницы обновлялись без перезагрузки.</p>
+            <div class="guide-steps">
+              <div class="guide-step"><span class="guide-step-num">1</span><div><strong>Установите VS Code</strong><p>Удобный редактор кода — ваш главный инструмент. Перейдите на вкладку «VS Code».</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">2</span><div><strong>Изучите основы</strong><p>Переменные, условия, циклы, функции — без этого фундамента двигаться дальше сложно.</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">3</span><div><strong>Практикуйтесь каждый день</strong><p>Даже 20–30 минут в день дают результат. Задавайте вопросы чату, просите примеры и объяснения.</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">4</span><div><strong>Не бойтесь ошибок</strong><p>Ошибки — это нормально. Вставляйте их в чат и просите объяснить, что пошло не так.</p></div></div>
+            </div>
+          </section>
+
+          <section class="guide-section" data-guide="vscode">
+            <h3>Установка и настройка VS Code</h3>
+            <p>VS Code (Visual Studio Code) — бесплатный редактор кода от Microsoft. Лёгкий, быстрый и очень популярный среди JavaScript-разработчиков.</p>
+            <div class="guide-steps">
+              <div class="guide-step"><span class="guide-step-num">1</span><div><strong>Скачайте VS Code</strong><p>Зайдите на <a href="https://code.visualstudio.com" target="_blank" rel="noopener noreferrer" class="guide-link">code.visualstudio.com</a> и нажмите кнопку загрузки для вашей системы (Windows / macOS / Linux).</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">2</span><div><strong>Установите и запустите</strong><p>Запустите установщик, следуйте инструкциям. После установки откройте VS Code.</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">3</span><div><strong>Создайте первый файл</strong><p>Нажмите <code>File → New File</code>, сохраните как <code>index.js</code>. Теперь можно писать JavaScript!</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">4</span><div><strong>Полезные расширения</strong><p>Откройте Extensions и установите:</p><ul class="guide-list"><li><a href="https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode" target="_blank" rel="noopener noreferrer" class="guide-link guide-link-bold">Prettier</a> — форматирует код автоматически</li><li><a href="https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint" target="_blank" rel="noopener noreferrer" class="guide-link guide-link-bold">ESLint</a> — подсвечивает ошибки</li><li><a href="https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer" target="_blank" rel="noopener noreferrer" class="guide-link guide-link-bold">Live Server</a> — авто-обновление страницы в браузере</li></ul></div></div>
+              <div class="guide-step"><span class="guide-step-num">5</span><div><strong>Запустите код</strong><p>Откройте терминал через <code>Terminal → New Terminal</code> и введите <code>node index.js</code> (нужен Node.js с <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer" class="guide-link">nodejs.org</a>).</p></div></div>
+            </div>
+          </section>
+
+          <section class="guide-section" data-guide="js">
+            <h3>Основы JavaScript</h3>
+            <p>Ключевые концепции, с которых стоит начать. Спрашивайте у чата подробности по каждой!</p>
+            <div class="guide-concept"><div class="guide-concept-title">Переменные</div><p>Хранят данные. Используйте <code>let</code> для изменяемых значений и <code>const</code> для постоянных.</p><pre class="guide-code"><code>let age = 25;
+const name = "Иван";
+console.log(name, age); // Иван 25</code></pre></div>
+            <div class="guide-concept"><div class="guide-concept-title">Условия</div><p>Выполняют разный код в зависимости от условия.</p><pre class="guide-code"><code>if (age >= 18) {
+  console.log("Совершеннолетний");
+} else {
+  console.log("Несовершеннолетний");
+}</code></pre></div>
+            <div class="guide-concept"><div class="guide-concept-title">Циклы</div><p>Повторяют действие нужное количество раз.</p><pre class="guide-code"><code>for (let i = 0; i < 5; i++) {
+  console.log("Шаг", i);
+}</code></pre></div>
+            <div class="guide-concept"><div class="guide-concept-title">Функции</div><p>Блоки кода, которые можно вызывать многократно.</p><pre class="guide-code"><code>function greet(name) {
+  return "Привет, " + name + "!";
+}
+console.log(greet("Мир")); // Привет, Мир!</code></pre></div>
+            <div class="guide-concept"><div class="guide-concept-title">Массивы</div><p>Список значений в одной переменной.</p><pre class="guide-code"><code>const fruits = ["яблоко", "банан", "вишня"];
+console.log(fruits[0]); // яблоко
+console.log(fruits.length); // 3</code></pre></div>
+          </section>
+
+          <section class="guide-section" data-guide="chat">
+            <h3>Как пользоваться чатом</h3>
+            <div class="guide-steps">
+              <div class="guide-step"><span class="guide-step-num">💬</span><div><strong>Задавайте вопросы на русском</strong><p>Например: «Объясни, что такое массив» или «Почему моя функция не работает?»</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">📋</span><div><strong>Вставляйте свой код</strong><p>Если что-то не работает — скопируйте код в сообщение и попросите найти ошибку.</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">📚</span><div><strong>Просите объяснения и примеры</strong><p>«Дай пример forEach» или «Объясни async/await простыми словами».</p></div></div>
+              <div class="guide-step"><span class="guide-step-num">🗂</span><div><strong>История чатов</strong><p>Все разговоры сохраняются в боковой панели. Переименуйте или удалите чат через меню «⋮».</p></div></div>
+            </div>
+          </section>
+
+          <section class="guide-section" data-guide="tips">
+            <h3>Советы новичку</h3>
+            <div class="guide-tips-grid">
+              <div class="guide-tip-card"><div class="guide-tip-icon">🎯</div><strong>Один шаг за раз</strong><p>Переменные → условия → циклы → функции. По очереди, не всё сразу.</p></div>
+              <div class="guide-tip-card"><div class="guide-tip-icon">⌨️</div><strong>Пишите код руками</strong><p>Не копируйте примеры — набирайте их сами. Мышечная память помогает запомнить синтаксис.</p></div>
+              <div class="guide-tip-card"><div class="guide-tip-icon">🔍</div><strong>Используйте console.log</strong><p>Выводите промежуточные значения — это самый простой способ понять, что происходит в коде.</p></div>
+              <div class="guide-tip-card"><div class="guide-tip-icon">🐛</div><strong>Не бойтесь ошибок</strong><p>Сообщение об ошибке — это подсказка. Вставьте его в чат и попросите объяснить.</p></div>
+              <div class="guide-tip-card"><div class="guide-tip-icon">📝</div><strong>Делайте заметки</strong><p>Записывайте новые концепции своими словами — это лучше закрепляет знания.</p></div>
+              <div class="guide-tip-card"><div class="guide-tip-icon">🏗</div><strong>Стройте мини-проекты</strong><p>Калькулятор, список задач, игра «угадай число» — лучшая практика после основ.</p></div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script type="module" src="/static/js/script.js?v=15"></script>
