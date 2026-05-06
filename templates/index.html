@@ -173,15 +173,31 @@
     </div>
   </div>
 
-  <div id="topicsModal" class="modal-overlay hidden">
-    <div class="modal-card topics-manager-card" role="dialog" aria-modal="true" aria-labelledby="topicsManagerTitle">
-      <div class="modal-header">
-        <h2 id="topicsManagerTitle">Темы</h2>
-        <button id="topicsCloseBtn" class="modal-close-btn" type="button" aria-label="Закрыть">✕</button>
+<div id="topicsModal" class="modal-overlay hidden">
+  <div
+    class="modal-card topics-manager-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="topicsManagerTitle"
+  >
+    <div class="modal-header">
+      <div class="topics-manager-title-block">
+        <h2 id="topicsManagerTitle">Дорожная карта JavaScript</h2>
       </div>
-      <div id="topicsManagerGrid" class="topics-manager-grid"></div>
+
+      <button
+        id="topicsCloseBtn"
+        class="modal-close-btn"
+        type="button"
+        aria-label="Закрыть"
+      >
+        ✕
+      </button>
     </div>
+
+    <div id="topicsManagerGrid" class="topics-manager-grid"></div>
   </div>
+</div>
 
   <div id="authOverlay" class="auth-overlay hidden">
     <div class="auth-backdrop"></div>

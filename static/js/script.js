@@ -447,17 +447,241 @@ function closeTopicsModal() {
 function renderTopicsManager() {
   topicsManagerGrid.innerHTML = "";
 
-  const topicCatalog = getTopicCatalog();
+  const roadmap = [
+    {
+      title: "Введение в JavaScript",
+      level: "beginner",
+      items: [
+        "Что такое JavaScript",
+        "История JavaScript",
+        "Версии JavaScript",
+        "Как запускать JavaScript"
+      ]
+    },
+    {
+      title: "Переменные",
+      level: "beginner",
+      items: [
+        "Объявление переменных",
+        "Hoisting",
+        "Правила именования",
+        "Области видимости",
+        "var / let / const"
+      ]
+    },
+    {
+      title: "Типы данных",
+      level: "beginner",
+      items: [
+        "Примитивные типы",
+        "Object",
+        "typeof",
+        "Встроенные объекты"
+      ]
+    },
+    {
+      title: "Преобразование типов",
+      level: "beginner",
+      items: [
+        "Явное преобразование",
+        "Неявное преобразование",
+        "Type Conversion vs Coercion"
+      ]
+    },
+    {
+      title: "Структуры данных",
+      level: "intermediate",
+      items: [
+        "Структурированные данные",
+        "JSON",
+        "Map",
+        "Set",
+        "Массивы"
+      ]
+    },
+    {
+      title: "Сравнение значений",
+      level: "beginner",
+      items: [
+        "==",
+        "===",
+        "Object.is",
+        "Алгоритмы сравнения"
+      ]
+    },
+    {
+      title: "Циклы и итерации",
+      level: "beginner",
+      items: [
+        "for",
+        "while",
+        "do...while",
+        "for...in",
+        "for...of",
+        "break / continue"
+      ]
+    },
+    {
+      title: "Условные конструкции",
+      level: "beginner",
+      items: [
+        "if...else",
+        "switch",
+        "throw",
+        "try / catch / finally",
+        "Ошибки"
+      ]
+    },
+    {
+      title: "Операторы и выражения",
+      level: "beginner",
+      items: [
+        "Присваивание",
+        "Сравнение",
+        "Арифметика",
+        "Логические операторы",
+        "Условный оператор"
+      ]
+    },
+    {
+      title: "Функции",
+      level: "beginner",
+      items: [
+        "Параметры функций",
+        "Arrow Functions",
+        "IIFE",
+        "arguments",
+        "Default Params",
+        "Rest",
+        "Рекурсия",
+        "Замыкания"
+      ]
+    },
+    {
+      title: "DOM API",
+      level: "intermediate",
+      items: [
+        "DOM",
+        "События",
+        "Обработчики событий"
+      ]
+    },
+    {
+      title: "Strict Mode",
+      level: "intermediate",
+      items: [
+        "Использование strict mode"
+      ]
+    },
+    {
+      title: "Ключевое слово this",
+      level: "intermediate",
+      items: [
+        "В методах",
+        "В функциях",
+        "Самостоятельное использование",
+        "В обработчиках событий",
+        "В arrow functions"
+      ]
+    },
+    {
+      title: "Модули в JavaScript",
+      level: "intermediate",
+      items: [
+        "CommonJS",
+        "ES Modules"
+      ]
+    },
+    {
+      title: "Асинхронный JavaScript",
+      level: "intermediate",
+      items: [
+        "Event Loop",
+        "setTimeout",
+        "setInterval",
+        "Callbacks",
+        "Promises",
+        "async / await"
+      ]
+    },
+    {
+      title: "Работа с API",
+      level: "intermediate",
+      items: [
+        "Fetch API",
+        "XMLHTTPRequest"
+      ]
+    },
+    {
+      title: "Классы",
+      level: "advanced",
+      items: [
+        "Классы",
+        "Прототипное наследование",
+        "Object Prototype"
+      ]
+    },
+    {
+      title: "Итераторы и генераторы",
+      level: "advanced",
+      items: [
+        "Итераторы",
+        "Генераторы"
+      ]
+    },
+    {
+      title: "Управление памятью",
+      level: "advanced",
+      items: [
+        "Жизненный цикл памяти",
+        "Garbage Collection"
+      ]
+    },
+    {
+      title: "Инструменты разработчика",
+      level: "advanced",
+      items: [
+        "Отладка ошибок",
+        "Отладка утечек памяти",
+        "Анализ производительности"
+      ]
+    }
+  ];
 
-  for (const topic of topicCatalog) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `topic-status-chip ${topicsState.learned.includes(topic.key) ? "learned" : "not-learned"}`;
-    btn.textContent = topic.title;
-    btn.disabled = true;
+  const wrapper = document.createElement("div");
+  wrapper.className = "roadmap-tree";
 
-    topicsManagerGrid.appendChild(btn);
-  }
+  roadmap.forEach((section, index) => {
+    const node = document.createElement("section");
+    node.className = `roadmap-node roadmap-node-${section.level}`;
+
+    node.innerHTML = `
+      <div class="roadmap-node-marker">${index + 1}</div>
+      <div class="roadmap-node-card">
+        <div class="roadmap-node-top">
+          <h3>${escapeHtml(section.title)}</h3>
+          <span class="roadmap-level">${getRoadmapLevelLabel(section.level)}</span>
+        </div>
+        <div class="roadmap-items">
+          ${section.items.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
+        </div>
+      </div>
+    `;
+
+    wrapper.appendChild(node);
+  });
+
+  topicsManagerGrid.appendChild(wrapper);
+}
+
+function getRoadmapLevelLabel(level) {
+  const labels = {
+    beginner: "Начальный",
+    intermediate: "Средний",
+    advanced: "Продвинутый"
+  };
+
+  return labels[level] || "Тема";
 }
 
 /* =========================
