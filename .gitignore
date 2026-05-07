@@ -8,3 +8,5 @@ __pycache__/
 chroma_data/
 history/
 test.db
+testing/
+start_app.py
