@@ -120,61 +120,56 @@
       aria-modal="true"
       aria-labelledby="surveyModalTitle"
     >
-      <div class="modal-header survey-header">
-        <div>
-          <h2 id="surveyModalTitle">Перед началом расскажите о вашем уровне JavaScript</h2>
-          <p class="survey-subtitle">
-            Это поможет подобрать подходящий формат обучения.
-          </p>
-        </div>
+      <!-- Progress bar -->
+      <div class="survey-progress">
+        <div class="survey-progress-bar" id="surveyProgressBar"></div>
       </div>
 
-      <div class="survey-content">
-        <div class="survey-section">
-          <div class="survey-section-title">Ваш уровень</div>
-
-          <div class="level-options" id="levelOptions">
-            <button
-              type="button"
-              class="level-card"
-              data-level="beginner"
-              id="levelBeginnerBtn"
-            >
-              <span class="level-card-title">Ничего не знаю</span>
-              <span class="level-card-text">
-                Начнём с самых основ, без выбора тем.
-              </span>
-            </button>
-
-            <button
-              type="button"
-              class="level-card"
-              data-level="returning"
-              id="levelReturningBtn"
-            >
-              <span class="level-card-title">Учил раньше</span>
-              <span class="level-card-text">
-                Покажем список тем, чтобы вы могли отметить знакомые направления.
-              </span>
-            </button>
-          </div>
+      <!-- Step 1: level -->
+      <div class="survey-step" id="surveyStep1">
+        <div class="survey-step-header">
+          <div class="survey-step-label">Шаг 1 из 2</div>
+          <h2 id="surveyModalTitle">Ваш уровень JavaScript</h2>
+          <p class="survey-subtitle">Это поможет подобрать подходящий формат обучения.</p>
         </div>
 
-        <div id="topicsSection" class="survey-section hidden">
-          <div class="survey-section-title">Какие темы вам уже знакомы?</div>
-          <p class="survey-note">
-            Можно выбрать несколько.
-          </p>
-
-          <div id="topicsGrid" class="topics-grid"></div>
+        <div class="level-options" id="levelOptions">
+          <button type="button" class="level-card" data-level="beginner" id="levelBeginnerBtn">
+            <span class="level-card-title">Начинающий</span>
+            <span class="level-card-text">Только начинаю знакомство с JavaScript. Начнём с самых основ.</span>
+          </button>
+          <button type="button" class="level-card" data-level="returning" id="levelReturningBtn">
+            <span class="level-card-title">Уже учил</span>
+            <span class="level-card-text">Кое-что знаю. Отмечу изученные темы и продолжу с нужного места.</span>
+          </button>
         </div>
 
-        <div class="modal-actions survey-actions">
-          <button type="button" id="surveyContinueBtn" class="modal-btn primary" disabled>
-            Продолжить
+        <div class="survey-actions">
+          <button type="button" id="surveyStep1NextBtn" class="modal-btn primary" disabled>
+            Далее →
           </button>
         </div>
       </div>
+
+      <!-- Step 2: topics -->
+      <div class="survey-step hidden" id="surveyStep2">
+        <div class="survey-step-header">
+          <div class="survey-step-label">Шаг 2 из 2</div>
+          <h2>Какие темы вам уже знакомы?</h2>
+          <p class="survey-subtitle">Отметьте всё, что вы уже знаете. Это обновит ваш прогресс в дорожной карте.</p>
+        </div>
+
+        <div id="topicsGrid" class="survey-topics-grid"></div>
+
+        <!-- hidden stub for legacy JS compat -->
+        <div id="topicsSection" class="hidden"></div>
+
+        <div class="survey-actions survey-actions-two">
+          <button type="button" id="surveyBackBtn" class="modal-btn secondary">← Назад</button>
+          <button type="button" id="surveyContinueBtn" class="modal-btn primary">Начать обучение</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -200,6 +195,7 @@
       </button>
     </div>
 
+    <div id="topicsProgressHeader" class="roadmap-progress-header"></div>
     <div id="topicsManagerGrid" class="topics-manager-grid"></div>
   </div>
 </div>
