@@ -364,6 +364,73 @@ textarea {
 }
 
 /* =========================================================
+   STREAK WIDGET
+========================================================= */
+.streak-widget {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 10px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  cursor: default;
+  user-select: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.streak-widget.streak-active {
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.08);
+}
+
+.streak-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: color 0.3s ease;
+  line-height: 0;
+}
+
+.streak-icon svg {
+  display: block;
+}
+
+.streak-widget.streak-active .streak-icon {
+  color: #f97316;
+}
+
+.streak-count {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--muted);
+  transition: color 0.3s ease;
+  min-width: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+}
+
+.streak-widget.streak-active .streak-count {
+  color: #f97316;
+}
+
+@keyframes streakPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.streak-widget.streak-pop {
+  animation: streakPop 0.4s ease;
+}
+
+/* =========================================================
    ОБЛАСТЬ ЧАТА
 ========================================================= */
 .chat-area {
