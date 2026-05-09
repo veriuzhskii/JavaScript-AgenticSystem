@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 
@@ -14,110 +15,80 @@ from langchain_groq import ChatGroq
 from torch import Tensor
 from transformers import AutoModel, AutoTokenizer
 
+logger = logging.getLogger(__name__)
+
+# -----------------------------
+# Guardrails-AI jailbreak detector
+# Установка: guardrails hub install hub://guardrails/detect_jailbreak
+# -----------------------------
+class GuardrailsJailbreakDetector:
+    """
+    ML-слой защиты от jailbreak/prompt-injection на базе guardrails-ai DetectJailbreak.
+    Загружается один раз при старте. Если библиотека или модель недоступны —
+    детектор помечается как disabled и система продолжает работу через regex-защиту.
+    """
+
+    def __init__(self, threshold: float = 0.85):
+        self.enabled = False
+        self.threshold = threshold
+        self._guard = None
+        self._load()
+
+    def _load(self) -> None:
+        try:
+            from guardrails import Guard
+            from guardrails.hub import DetectJailbreak
+
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self._guard = Guard().use(
+                DetectJailbreak,
+                threshold=self.threshold,
+                device=device,
+                on_fail="exception",
+            )
+            self.enabled = True
+            logger.info(
+                f"[GuardrailsJailbreakDetector] загружен успешно "
+                f"(device={device}, threshold={self.threshold})"
+            )
+        except ImportError:
+            logger.warning(
+                "[GuardrailsJailbreakDetector] guardrails-ai не установлен. "
+                "Запустите: guardrails hub install hub://guardrails/detect_jailbreak "
+                "— и перезапустите сервер. Активна только regex-защита."
+            )
+        except Exception as exc:
+            logger.warning(
+                f"[GuardrailsJailbreakDetector] не удалось загрузить модель: {exc}. "
+                "Активна только regex-защита."
+            )
+
+    def check(self, text: str) -> Tuple[bool, str]:
+        """
+        Возвращает (is_injection: bool, reason: str).
+        Если детектор отключён — всегда возвращает (False, "").
+        """
+        if not self.enabled or not self._guard or not text:
+            return False, ""
+
+        try:
+            self._guard.validate(text)
+            # validate не выбросило исключение — текст безопасен
+            return False, ""
+        except Exception as exc:
+            reason = f"guardrails DetectJailbreak: {exc}"
+            logger.info(f"[GuardrailsJailbreakDetector] заблокировано — {reason}")
+            return True, reason
+
+
+# Синглтон — создаётся при импорте модуля один раз
+_jailbreak_detector = GuardrailsJailbreakDetector(threshold=0.85)
+
 
 # -----------------------------
 # Utils
 # -----------------------------
 CYRILLIC_PATTERN = re.compile(r"[А-Яа-яЁё]")
-
-# Простая эвристика по темам JavaScript
-JAVASCRIPT_TOPICS = [
-    "variables",
-    "data types",
-    "operators",
-    "conditionals",
-    "loops",
-    "functions",
-    "arrays",
-    "objects",
-    "string",
-    "number",
-    "boolean",
-    "null",
-    "undefined",
-    "scope",
-    "hoisting",
-    "closure",
-    "this",
-    "prototype",
-    "class",
-    "inheritance",
-    "modules",
-    "async",
-    "promise",
-    "fetch",
-    "event loop",
-    "dom",
-    "events",
-    "json",
-    "error handling",
-    "try catch",
-    "es6",
-    "destructuring",
-    "spread",
-    "rest",
-    "map",
-    "filter",
-    "reduce",
-    "set",
-    "map object",
-    "weakmap",
-    "weakset",
-    "regexp",
-    "typescript",
-    "ооп",
-    "переменные",
-    "типы данных",
-    "операторы",
-    "условия",
-    "циклы",
-    "функции",
-    "массивы",
-    "объекты",
-    "замыкания",
-    "область видимости",
-    "прототипы",
-    "классы",
-    "модули",
-    "асинхронность",
-    "промисы",
-    "event loop",
-    "dom",
-    "события",
-    "обработка ошибок",
-]
-
-# Подозрительные паттерны prompt injection / jailbreak
-PROMPT_INJECTION_PATTERNS = [
-    r"ignore\s+(all\s+)?previous\s+instructions",
-    r"disregard\s+(all\s+)?previous\s+instructions",
-    r"forget\s+(all\s+)?previous\s+instructions",
-    r"забудь\s+все\s+предыдущие\s+инструкции",
-    r"игнорируй\s+все\s+предыдущие\s+инструкции",
-    r"проигнорируй\s+все\s+предыдущие\s+инструкции",
-    r"system\s+prompt",
-    r"developer\s+message",
-    r"hidden\s+instructions",
-    r"reveal\s+.*instructions",
-    r"show\s+.*prompt",
-    r"print\s+.*prompt",
-    r"act\s+as\s+",
-    r"you\s+are\s+now\s+",
-    r"pretend\s+to\s+be",
-    r"roleplay\s+as",
-    r"jailbreak",
-    r"bypass\s+safety",
-    r"override\s+instructions",
-    r"do\s+not\s+follow\s+the\s+above",
-    r"answer\s+as\s+the\s+system",
-    r"simulate\s+developer",
-    r"выведи\s+системный\s+промпт",
-    r"покажи\s+системный\s+промпт",
-    r"раскрой\s+скрытые\s+инструкции",
-    r"ответь\s+как\s+system",
-    r"ответь\s+как\s+разработчик",
-]
-
 
 def get_device() -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
@@ -189,33 +160,13 @@ def wrap_untrusted_text(tag: str, text: str) -> str:
 
 
 def detect_prompt_injection(text: str) -> Tuple[bool, str]:
-    normalized = (text or "").strip().lower()
-
-    if not normalized:
+    if not (text or "").strip():
         return False, ""
 
-    if len(normalized) > 12000:
+    if len(text) > 12000:
         return True, "слишком длинный запрос с потенциальным риском prompt injection"
 
-    for pattern in PROMPT_INJECTION_PATTERNS:
-        if re.search(pattern, normalized, flags=re.IGNORECASE):
-            return True, f"обнаружен подозрительный паттерн: {pattern}"
-
-    suspicious_markers = [
-        "```system",
-        "```developer",
-        "<system>",
-        "</system>",
-        "<developer>",
-        "</developer>",
-        "BEGIN_SYSTEM_PROMPT",
-        "END_SYSTEM_PROMPT",
-    ]
-    for marker in suspicious_markers:
-        if marker.lower() in normalized:
-            return True, f"обнаружен подозрительный маркер: {marker}"
-
-    return False, ""
+    return _jailbreak_detector.check(text.strip())
 
 
 def sanitize_model_text(text: str) -> str:
