@@ -992,6 +992,11 @@ function toggleSingleItem(slug, spanEl, nodeSlug, nodeItems, nodeEl, markerEl, n
 
 function toggleNodeAllItems(nodeSlug, nodeItems, currentlyAllLearned) {
   const allSlugs = nodeItems.map((t) => makeItemSlug(nodeSlug, t));
+
+  // Capture current progress before re-render for animation
+  const fillElBefore = topicsProgressHeader.querySelector(".roadmap-progress-bar-fill");
+  const prevPct = fillElBefore ? (parseFloat(fillElBefore.dataset.progress || fillElBefore.style.width) || 0) : 0;
+
   if (currentlyAllLearned) {
     allSlugs.forEach((s) => roadmapItemsState.delete(s));
   } else {
@@ -999,9 +1004,18 @@ function toggleNodeAllItems(nodeSlug, nodeItems, currentlyAllLearned) {
   }
   renderTopicsManager();
   scheduleRoadmapSave();
+
+  // Animate progress bar after re-render
+  const fillElAfter = topicsProgressHeader.querySelector(".roadmap-progress-bar-fill");
+  const fracEl = topicsProgressHeader.querySelector(".roadmap-progress-fraction");
+  if (fillElAfter) {
+    const newPct = parseFloat(fillElAfter.dataset.progress || fillElAfter.style.width) || 0;
+    fillElAfter.style.width = `${prevPct}%`;
+    animateProgressBar(fillElAfter, prevPct, newPct, fracEl);
+  }
 }
 
-function updateRoadmapProgressHeader() {
+function updateRoadmapProgressHeader(animate = false) {
   const fracEl = topicsProgressHeader.querySelector(".roadmap-progress-fraction");
   const fillEl = topicsProgressHeader.querySelector(".roadmap-progress-bar-fill");
   if (!fracEl || !fillEl) return;
@@ -1009,10 +1023,40 @@ function updateRoadmapProgressHeader() {
   const allSpans = topicsManagerGrid.querySelectorAll(".roadmap-items span");
   const total = allSpans.length;
   const learned = topicsManagerGrid.querySelectorAll(".roadmap-items .roadmap-item--learned").length;
-  const pct = total > 0 ? Math.round((learned / total) * 100) : 0;
+  const pct = total > 0 ? Math.ceil((learned / total) * 100) : 0;
 
-  fracEl.textContent = `${learned} / ${total} пунктов`;
+  fracEl.textContent = `${pct}%`;
+
+  if (animate) {
+    const prevPct = parseFloat(fillEl.dataset.progress || fillEl.style.width) || 0;
+    fillEl.dataset.progress = pct;
+    animateProgressBar(fillEl, prevPct, pct, fracEl);
+  } else {
+    fillEl.dataset.progress = pct;
   fillEl.style.width = `${pct}%`;
+}
+}
+
+function animateProgressBar(fillEl, fromPct, toPct, fracEl) {
+  const duration = 600;
+  const startTime = performance.now();
+  const delta = toPct - fromPct;
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = fromPct + delta * eased;
+    fillEl.style.width = `${current}%`;
+    if (fracEl) fracEl.textContent = `${Math.ceil(current)}%`;
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      if (fracEl) fracEl.textContent = `${toPct}%`;
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
 function getRoadmapLevelLabel(level) {
