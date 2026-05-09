@@ -1033,8 +1033,8 @@ function updateRoadmapProgressHeader(animate = false) {
     animateProgressBar(fillEl, prevPct, pct, fracEl);
   } else {
     fillEl.dataset.progress = pct;
-  fillEl.style.width = `${pct}%`;
-}
+    fillEl.style.width = `${pct}%`;
+  }
 }
 
 function animateProgressBar(fillEl, fromPct, toPct, fracEl) {
@@ -1848,39 +1848,50 @@ form.addEventListener("submit", async (e) => {
 
 // Step 1: level selection
 levelBeginnerBtn.addEventListener("click", () => {
-  onboardingState.level = "beginner";
-  levelBeginnerBtn.classList.add("active");
-  levelReturningBtn.classList.remove("active");
-  surveyStep1NextBtn.disabled = false;
+  if (onboardingState.level === "beginner") {
+    // Deselect
+    onboardingState.level = null;
+    levelBeginnerBtn.classList.remove("active");
+    surveyStep1NextBtn.disabled = true;
+  } else {
+    onboardingState.level = "beginner";
+    levelBeginnerBtn.classList.add("active");
+    levelReturningBtn.classList.remove("active");
+    surveyStep1NextBtn.disabled = false;
+  }
 });
 
 levelReturningBtn.addEventListener("click", () => {
-  onboardingState.level = "returning";
-  levelReturningBtn.classList.add("active");
-  levelBeginnerBtn.classList.remove("active");
-  surveyStep1NextBtn.disabled = false;
+  if (onboardingState.level === "returning") {
+    // Deselect
+    onboardingState.level = null;
+    levelReturningBtn.classList.remove("active");
+    surveyStep1NextBtn.disabled = true;
+  } else {
+    onboardingState.level = "returning";
+    levelReturningBtn.classList.add("active");
+    levelBeginnerBtn.classList.remove("active");
+    surveyStep1NextBtn.disabled = false;
+  }
 });
 
-// Step 1 → Step 2
+// Step 1 → Step 2 (or finish directly for beginners)
 surveyStep1NextBtn.addEventListener("click", () => {
   if (!onboardingState.level) return;
 
-  // Both levels go to step 2 — beginners start with nothing checked,
-  // returning users check what they already know
+  if (onboardingState.level === "beginner") {
+    // Beginners have nothing to select — finish immediately with empty topics
+    onboardingState.topics = [];
+    finishSurvey([]);
+    return;
+  }
+
+  // Returning users go to step 2 to select known topics
   const step2Title = surveyStep2.querySelector("h2");
   const step2Subtitle = surveyStep2.querySelector(".survey-subtitle");
 
-  if (onboardingState.level === "beginner") {
-    if (step2Title) step2Title.textContent = "Что планируете изучить?";
-    if (step2Subtitle) step2Subtitle.textContent = "Отметьте темы, которые хотите пройти. Это обновит ваш прогресс в дорожной карте.";
-    // Clear pre-selected topics for fresh beginners
-    if (onboardingState.topics.length === 0) {
-      onboardingState.topics = [];
-    }
-  } else {
-    if (step2Title) step2Title.textContent = "Какие темы вам уже знакомы?";
-    if (step2Subtitle) step2Subtitle.textContent = "Отметьте всё, что вы уже знаете. Это обновит ваш прогресс в дорожной карте.";
-  }
+  if (step2Title) step2Title.textContent = "Какие темы вам уже знакомы?";
+  if (step2Subtitle) step2Subtitle.textContent = "Отметьте всё, что вы уже знаете. Это обновит ваш прогресс в дорожной карте.";
 
   surveyStep1.classList.add("hidden");
   surveyStep2.classList.remove("hidden");
