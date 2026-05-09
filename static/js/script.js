@@ -11,6 +11,120 @@ let currentAuthView = "login";
 const ONBOARDING_STORAGE_KEY = "js_onboarding_state";
 const DEV_FORCE_SURVEY_RESET_KEY = "js_dev_force_survey_reset";
 
+/* =========================
+   STREAK SYSTEM
+========================= */
+const STREAK_STORAGE_KEY = "js_streak_state";
+
+function getTodayDateStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function loadStreakState() {
+  try {
+    return JSON.parse(localStorage.getItem(STREAK_STORAGE_KEY)) || {
+      count: 0,
+      lastActiveDate: null
+    };
+  } catch {
+    return { count: 0, lastActiveDate: null };
+  }
+}
+
+function saveStreakState(state) {
+  localStorage.setItem(STREAK_STORAGE_KEY, JSON.stringify(state));
+}
+
+function dateDiffDays(dateStrA, dateStrB) {
+  // Returns dateStrB - dateStrA in full calendar days
+  const a = new Date(dateStrA + "T00:00:00");
+  const b = new Date(dateStrB + "T00:00:00");
+  return Math.round((b - a) / 86400000);
+}
+
+function recordStreakActivity() {
+  const state = loadStreakState();
+  const today = getTodayDateStr();
+
+  if (state.lastActiveDate === today) {
+    // Already counted today
+    return state;
+  }
+
+  if (!state.lastActiveDate) {
+    state.count = 1;
+  } else {
+    const diff = dateDiffDays(state.lastActiveDate, today);
+    if (diff === 1) {
+      // Consecutive day
+      state.count += 1;
+    } else {
+      // Missed one or more days — reset
+      state.count = 1;
+    }
+  }
+
+  state.lastActiveDate = today;
+  saveStreakState(state);
+  return state;
+}
+
+function getStreakDisplayState() {
+  const state = loadStreakState();
+  const today = getTodayDateStr();
+
+  if (!state.lastActiveDate) {
+    return { count: 0, active: false };
+  }
+
+  const diff = dateDiffDays(state.lastActiveDate, today);
+
+  if (diff >= 2) {
+    // Reset: missed 2+ days
+    const reset = { count: 0, lastActiveDate: null };
+    saveStreakState(reset);
+    return { count: 0, active: false };
+  }
+
+  // diff === 0 → active today, diff === 1 → yesterday (still intact, just grey)
+  return {
+    count: state.count,
+    active: diff === 0
+  };
+}
+
+function renderStreakWidget(animate = false) {
+  const streakWidget = document.getElementById("streakWidget");
+  const streakIcon = document.getElementById("streakIcon");
+  const streakCount = document.getElementById("streakCount");
+
+  if (!streakWidget || !streakIcon || !streakCount) return;
+
+  // Only show when user is logged in
+  if (!authUser) {
+    streakWidget.classList.add("hidden");
+    return;
+  }
+
+  streakWidget.classList.remove("hidden");
+
+  const { count, active } = getStreakDisplayState();
+  streakIcon.innerHTML = icons.flame;
+  streakCount.textContent = String(count);
+
+  streakWidget.classList.toggle("streak-active", active);
+
+  if (animate) {
+    streakWidget.classList.remove("streak-pop");
+    void streakWidget.offsetWidth; // reflow to restart animation
+    streakWidget.classList.add("streak-pop");
+    streakWidget.addEventListener("animationend", () => {
+      streakWidget.classList.remove("streak-pop");
+    }, { once: true });
+  }
+}
+
 const TOPIC_ORDER = [
   "variables",
   "operators",
@@ -320,6 +434,7 @@ function setAuthorizedState(user) {
   closeAuthOverlay();
   setDevResetButtonVisibility();
   updateChatAvailability();
+  renderStreakWidget();
 }
 
 function setUnauthorizedState() {
@@ -327,6 +442,7 @@ function setUnauthorizedState() {
   userDropdown.classList.add("hidden");
   userMenuBtn.classList.add("hidden");
   setDevResetButtonVisibility();
+  renderStreakWidget();
   openAuthOverlay("login");
   updateChatAvailability();
 }
@@ -1412,6 +1528,16 @@ form.addEventListener("submit", async (e) => {
     const lastMessage = chats[data.chat_id].messages[lastMessageIndex];
 
     if (lastMessage && lastMessage.role === "assistant") {
+      // Record streak only for supported answers
+      const isUnsupported = /не могу|не отвечаю|не поддерживается|unsupported|вне моей|не в моей компетенции/i.test(lastMessage.content);
+      if (!isUnsupported) {
+        const wasActive = getStreakDisplayState().active;
+        recordStreakActivity();
+        const isNowActive = getStreakDisplayState().active;
+        // Animate only when streak counter actually changes (new day)
+        renderStreakWidget(!wasActive && isNowActive);
+      }
+
       startAssistantTyping(data.chat_id, lastMessageIndex, lastMessage.content);
     }
   } catch (err) {
@@ -1912,6 +2038,7 @@ async function init() {
   setDevResetButtonVisibility();
   updateChatAvailability();
   autoResizeTextarea();
+  renderStreakWidget();
 
   if (authUser && !canUseChat()) {
     openSurveyModal();
