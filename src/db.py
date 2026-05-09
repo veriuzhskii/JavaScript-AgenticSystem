@@ -46,6 +46,14 @@ class UserTopic(Base):
     topic_key: Mapped[str] = mapped_column(ForeignKey("topics.key", ondelete="CASCADE"), primary_key=True)
 
 
+class UserRoadmapItem(Base):
+    """Stores individual roadmap item completion, e.g. 'variables__hoisting'."""
+    __tablename__ = "user_roadmap_items"
+
+    user_id = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    item_slug: Mapped[str] = mapped_column(String(200), primary_key=True)
+
+
 engine = create_async_engine(DATABASE_URL, echo=False)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
