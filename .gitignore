@@ -7,5 +7,5 @@ __pycache__/
 *.pyd
 chroma_data/
 history/
-test.db
+agenticsystem.db
 .guardrails/
