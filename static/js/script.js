@@ -381,18 +381,37 @@ function setDevResetButtonVisibility() {
   devResetSurveyBtn.classList.toggle("hidden", !isDevEnvironment() || !authUser);
 }
 
-function resetSurveyForDev() {
+async function resetSurveyForDev() {
   if (!isDevEnvironment()) return;
 
-  onboardingState = {
-    completed: false,
-    level: null,
-    topics: []
-  };
-
+  // 1. Сбросить локальный onboarding state
+  onboardingState = { completed: false, level: null, topics: [] };
   saveOnboardingState();
   localStorage.setItem(DEV_FORCE_SURVEY_RESET_KEY, "1");
 
+  // 2. Сбросить выученные темы на сервере
+  try {
+    await api("/topics/me", {
+      method: "PUT",
+      body: JSON.stringify({ topic_keys: [] })
+    });
+    topicsState.learned = [];
+  } catch (err) {
+    console.warn("Не удалось сбросить темы на сервере:", err);
+  }
+
+  // 3. Сбросить прогресс дорожной карты на сервере
+  try {
+    await api("/roadmap/items", {
+      method: "PUT",
+      body: JSON.stringify({ item_slugs: [] })
+    });
+    roadmapItemsState = new Set();
+  } catch (err) {
+    console.warn("Не удалось сбросить дорожную карту:", err);
+  }
+
+  // 4. Перерисовать всё
   userDropdown.classList.add("hidden");
   updateSurveyUI();
   updateChatAvailability();
