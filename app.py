@@ -18,6 +18,7 @@ from model import MultiAgentSystem
 from src.db import (
     Topic,
     User,
+    UserRoadmapItem,
     UserTopic,
     create_db_and_tables,
     get_async_session,
@@ -80,10 +81,37 @@ class UpdateUserTopicsRequest(BaseModel):
     topic_keys: List[str] = Field(default_factory=list)
 
 
+class UpdateRoadmapItemsRequest(BaseModel):
+    item_slugs: List[str] = Field(default_factory=list)
+
+
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
     await seed_topics()
+    await seed_extra_topics()
+
+
+async def seed_extra_topics():
+    """Ensure new topic keys added to the frontend survey exist in the DB."""
+    from sqlalchemy import insert
+    from src.db import get_async_session
+
+    extra = [
+        {"key": "this", "title": "Ключевое слово this"},
+        {"key": "modules", "title": "Модули"},
+    ]
+
+    async for session in get_async_session():
+        existing = await session.execute(select(Topic.key))
+        existing_keys = set(existing.scalars().all())
+
+        for topic in extra:
+            if topic["key"] not in existing_keys:
+                session.add(Topic(key=topic["key"], title=topic["title"]))
+
+        await session.commit()
+        break
 
 
 app.include_router(
@@ -256,12 +284,9 @@ async def update_my_topics(
     existing_topics_result = await session.execute(select(Topic.key))
     existing_topic_keys = set(existing_topics_result.scalars().all())
 
-    invalid_keys = [key for key in requested_keys if key not in existing_topic_keys]
-    if invalid_keys:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Неизвестные темы: {', '.join(invalid_keys)}",
-        )
+    # Silently filter out unknown keys so new frontend topics don't break
+    # until the DB seed is updated
+    requested_keys = [key for key in requested_keys if key in existing_topic_keys]
 
     await session.execute(delete(UserTopic).where(UserTopic.user_id == user.id))
 
@@ -277,6 +302,36 @@ async def update_my_topics(
         topics=[TopicRead(key=topic.key, title=topic.title) for topic in topics],
         learned_topic_keys=requested_keys,
     )
+
+
+@app.get("/roadmap/items")
+async def get_roadmap_items(
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    result = await session.execute(
+        select(UserRoadmapItem.item_slug).where(UserRoadmapItem.user_id == user.id)
+    )
+    return {"item_slugs": list(result.scalars().all())}
+
+
+@app.put("/roadmap/items")
+async def update_roadmap_items(
+    request: UpdateRoadmapItemsRequest,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    slugs = list(dict.fromkeys(s.strip() for s in request.item_slugs if s.strip()))
+
+    await session.execute(
+        delete(UserRoadmapItem).where(UserRoadmapItem.user_id == user.id)
+    )
+
+    for slug in slugs:
+        session.add(UserRoadmapItem(user_id=user.id, item_slug=slug))
+
+    await session.commit()
+    return {"item_slugs": slugs}
 
 
 @app.get("/chats")
