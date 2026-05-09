@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Dict, List
 from uuid import uuid4
 
@@ -83,6 +83,12 @@ class UpdateUserTopicsRequest(BaseModel):
 
 class UpdateRoadmapItemsRequest(BaseModel):
     item_slugs: List[str] = Field(default_factory=list)
+
+
+class StreakResponse(BaseModel):
+    streak_days: int
+    last_streak_date: str | None
+    active_today: bool
 
 
 @app.on_event("startup")
@@ -332,6 +338,79 @@ async def update_roadmap_items(
 
     await session.commit()
     return {"item_slugs": slugs}
+
+
+# ── Streak ────────────────────────────────────────────────────────────────────
+
+@app.get("/streak", response_model=StreakResponse)
+async def get_streak(
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Return current streak state for the authenticated user."""
+    result = await session.execute(select(User).where(User.id == user.id))
+    db_user = result.scalar_one()
+
+    today = date.today()
+    last = db_user.last_streak_date
+
+    # If missed 2+ days — streak is dead (read-only check, no write here)
+    if last is not None:
+        # last_streak_date is stored as string "YYYY-MM-DD" by SQLite Date column
+        if isinstance(last, str):
+            last = date.fromisoformat(last)
+        diff = (today - last).days
+        if diff >= 2:
+            return StreakResponse(streak_days=0, last_streak_date=None, active_today=False)
+
+    active_today = last == today if last else False
+    return StreakResponse(
+        streak_days=db_user.streak_days,
+        last_streak_date=str(last) if last else None,
+        active_today=active_today,
+    )
+
+
+@app.post("/streak/activity", response_model=StreakResponse)
+async def record_streak_activity(
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Record that the user was active today. Increments streak if it's a new day."""
+    result = await session.execute(select(User).where(User.id == user.id))
+    db_user = result.scalar_one()
+
+    today = date.today()
+    last = db_user.last_streak_date
+
+    if isinstance(last, str):
+        last = date.fromisoformat(last) if last else None
+
+    if last == today:
+        # Already counted today — return as-is
+        return StreakResponse(
+            streak_days=db_user.streak_days,
+            last_streak_date=str(today),
+            active_today=True,
+        )
+
+    if last is None:
+        db_user.streak_days = 1
+    else:
+        diff = (today - last).days
+        if diff == 1:
+            db_user.streak_days += 1  # consecutive day
+        else:
+            db_user.streak_days = 1   # missed days — reset
+
+    db_user.last_streak_date = today
+    await session.commit()
+
+    return StreakResponse(
+        streak_days=db_user.streak_days,
+        last_streak_date=str(today),
+        active_today=True,
+    )
 
 
 @app.get("/chats")
