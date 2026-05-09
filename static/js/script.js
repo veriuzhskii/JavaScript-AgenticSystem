@@ -12,85 +12,37 @@ const ONBOARDING_STORAGE_KEY = "js_onboarding_state";
 const DEV_FORCE_SURVEY_RESET_KEY = "js_dev_force_survey_reset";
 
 /* =========================
-   STREAK SYSTEM
+   STREAK SYSTEM (server-side)
 ========================= */
-const STREAK_STORAGE_KEY = "js_streak_state";
 
-function getTodayDateStr() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
+// In-memory cache of the last fetched streak state
+let _streakCache = null; // { streak_days, last_streak_date, active_today }
 
-function loadStreakState() {
+async function fetchStreakFromServer() {
   try {
-    return JSON.parse(localStorage.getItem(STREAK_STORAGE_KEY)) || {
-      count: 0,
-      lastActiveDate: null
-    };
+    const data = await api("/streak");
+    _streakCache = data;
+    return data;
   } catch {
-    return { count: 0, lastActiveDate: null };
+    return _streakCache || { streak_days: 0, last_streak_date: null, active_today: false };
   }
 }
 
-function saveStreakState(state) {
-  localStorage.setItem(STREAK_STORAGE_KEY, JSON.stringify(state));
-}
-
-function dateDiffDays(dateStrA, dateStrB) {
-  // Returns dateStrB - dateStrA in full calendar days
-  const a = new Date(dateStrA + "T00:00:00");
-  const b = new Date(dateStrB + "T00:00:00");
-  return Math.round((b - a) / 86400000);
-}
-
-function recordStreakActivity() {
-  const state = loadStreakState();
-  const today = getTodayDateStr();
-
-  if (state.lastActiveDate === today) {
-    // Already counted today
-    return state;
+async function recordStreakActivity() {
+  try {
+    const data = await api("/streak/activity", { method: "POST" });
+    _streakCache = data;
+    return data;
+  } catch {
+    return _streakCache || { streak_days: 0, last_streak_date: null, active_today: false };
   }
-
-  if (!state.lastActiveDate) {
-    state.count = 1;
-  } else {
-    const diff = dateDiffDays(state.lastActiveDate, today);
-    if (diff === 1) {
-      // Consecutive day
-      state.count += 1;
-    } else {
-      // Missed one or more days — reset
-      state.count = 1;
-    }
-  }
-
-  state.lastActiveDate = today;
-  saveStreakState(state);
-  return state;
 }
 
 function getStreakDisplayState() {
-  const state = loadStreakState();
-  const today = getTodayDateStr();
-
-  if (!state.lastActiveDate) {
-    return { count: 0, active: false };
-  }
-
-  const diff = dateDiffDays(state.lastActiveDate, today);
-
-  if (diff >= 2) {
-    // Reset: missed 2+ days
-    const reset = { count: 0, lastActiveDate: null };
-    saveStreakState(reset);
-    return { count: 0, active: false };
-  }
-
-  // diff === 0 → active today, diff === 1 → yesterday (still intact, just grey)
+  if (!_streakCache) return { count: 0, active: false };
   return {
-    count: state.count,
-    active: diff === 0
+    count: _streakCache.streak_days,
+    active: _streakCache.active_today,
   };
 }
 
@@ -1033,7 +985,7 @@ function updateRoadmapProgressHeader(animate = false) {
     animateProgressBar(fillEl, prevPct, pct, fracEl);
   } else {
     fillEl.dataset.progress = pct;
-    fillEl.style.width = `${pct}%`;
+  fillEl.style.width = `${pct}%`;
   }
 }
 
@@ -1854,10 +1806,10 @@ levelBeginnerBtn.addEventListener("click", () => {
     levelBeginnerBtn.classList.remove("active");
     surveyStep1NextBtn.disabled = true;
   } else {
-    onboardingState.level = "beginner";
-    levelBeginnerBtn.classList.add("active");
-    levelReturningBtn.classList.remove("active");
-    surveyStep1NextBtn.disabled = false;
+  onboardingState.level = "beginner";
+  levelBeginnerBtn.classList.add("active");
+  levelReturningBtn.classList.remove("active");
+  surveyStep1NextBtn.disabled = false;
   }
 });
 
@@ -1868,10 +1820,10 @@ levelReturningBtn.addEventListener("click", () => {
     levelReturningBtn.classList.remove("active");
     surveyStep1NextBtn.disabled = true;
   } else {
-    onboardingState.level = "returning";
-    levelReturningBtn.classList.add("active");
-    levelBeginnerBtn.classList.remove("active");
-    surveyStep1NextBtn.disabled = false;
+  onboardingState.level = "returning";
+  levelReturningBtn.classList.add("active");
+  levelBeginnerBtn.classList.remove("active");
+  surveyStep1NextBtn.disabled = false;
   }
 });
 
@@ -1890,8 +1842,17 @@ surveyStep1NextBtn.addEventListener("click", () => {
   const step2Title = surveyStep2.querySelector("h2");
   const step2Subtitle = surveyStep2.querySelector(".survey-subtitle");
 
-  if (step2Title) step2Title.textContent = "Какие темы вам уже знакомы?";
-  if (step2Subtitle) step2Subtitle.textContent = "Отметьте всё, что вы уже знаете. Это обновит ваш прогресс в дорожной карте.";
+  if (onboardingState.level === "beginner") {
+    if (step2Title) step2Title.textContent = "Что планируете изучить?";
+    if (step2Subtitle) step2Subtitle.textContent = "Отметьте темы, которые хотите пройти. Это обновит ваш прогресс в дорожной карте.";
+    // Clear pre-selected topics for fresh beginners
+    if (onboardingState.topics.length === 0) {
+      onboardingState.topics = [];
+    }
+  } else {
+    if (step2Title) step2Title.textContent = "Какие темы вам уже знакомы?";
+    if (step2Subtitle) step2Subtitle.textContent = "Отметьте всё, что вы уже знаете. Это обновит ваш прогресс в дорожной карте.";
+  }
 
   surveyStep1.classList.add("hidden");
   surveyStep2.classList.remove("hidden");
@@ -2351,6 +2312,7 @@ async function init() {
     try {
       await loadTopicsFromServer();
       await loadChatsFromServer();
+      await fetchStreakFromServer();
     } catch (err) {
       console.error(err);
       topicsState.all = sortTopicsByLearningOrder([...FALLBACK_TOPICS]);
