@@ -136,6 +136,8 @@ const TOPIC_ORDER = [
   "objects",
   "dom",
   "events",
+  "this",
+  "modules",
   "async",
   "api"
 ];
@@ -151,8 +153,59 @@ const FALLBACK_TOPICS = [
   { key: "objects", title: "Объекты" },
   { key: "dom", title: "DOM" },
   { key: "events", title: "События" },
+  { key: "this", title: "Ключевое слово this" },
+  { key: "modules", title: "Модули" },
   { key: "async", title: "Async / Await" },
   { key: "api", title: "Fetch / API" }
+];
+
+// Grouped topics shown in the onboarding survey (beginner + some intermediate)
+// Keys map to roadmap nodeSlug/topicKey so checked items get highlighted in the roadmap
+const SURVEY_TOPIC_GROUPS = [
+  {
+    group: "Основы языка",
+    level: "beginner",
+    topics: [
+      { key: "variables", title: "Переменные и типы данных", hint: "var, let, const, hoisting, области видимости" },
+      { key: "operators", title: "Операторы и выражения", hint: "арифметика, сравнение, логические операторы" },
+      { key: "conditions", title: "Условные конструкции", hint: "if / else, switch, тернарный оператор" },
+      { key: "loops", title: "Циклы и итерации", hint: "for, while, for...of, break / continue" },
+      { key: "functions", title: "Функции", hint: "объявление, стрелочные, замыкания, рекурсия" },
+      { key: "strings", title: "Строки", hint: "методы строк, шаблонные литералы, RegExp" },
+    ]
+  },
+  {
+    group: "Структуры данных",
+    level: "beginner",
+    topics: [
+      { key: "arrays", title: "Массивы", hint: "map, filter, reduce, spread, деструктуризация" },
+      { key: "objects", title: "Объекты", hint: "свойства, методы, деструктуризация, spread" },
+    ]
+  },
+  {
+    group: "Браузер и взаимодействие",
+    level: "intermediate",
+    topics: [
+      { key: "dom", title: "DOM API", hint: "querySelector, createElement, innerHTML, classList" },
+      { key: "events", title: "События", hint: "addEventListener, делегирование, bubbling" },
+    ]
+  },
+  {
+    group: "Продвинутые концепции",
+    level: "intermediate",
+    topics: [
+      { key: "this", title: "Ключевое слово this", hint: "в методах, функциях, arrow functions, bind/call/apply" },
+      { key: "modules", title: "Модули", hint: "ES Modules, import / export, CommonJS" },
+    ]
+  },
+  {
+    group: "Асинхронность и API",
+    level: "intermediate",
+    topics: [
+      { key: "async", title: "Асинхронный JavaScript", hint: "Event Loop, Promise, async / await" },
+      { key: "api", title: "Работа с API", hint: "Fetch API, HTTP-запросы, JSON, REST" },
+    ]
+  }
 ];
 
 let onboardingState = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY)) || {
@@ -194,9 +247,14 @@ const contextDeleteBtn = document.getElementById("contextDeleteBtn");
 const surveyModal = document.getElementById("surveyModal");
 const levelBeginnerBtn = document.getElementById("levelBeginnerBtn");
 const levelReturningBtn = document.getElementById("levelReturningBtn");
-const topicsSection = document.getElementById("topicsSection");
+const topicsSection = document.getElementById("topicsSection"); // legacy stub
 const topicsGrid = document.getElementById("topicsGrid");
 const surveyContinueBtn = document.getElementById("surveyContinueBtn");
+const surveyStep1 = document.getElementById("surveyStep1");
+const surveyStep2 = document.getElementById("surveyStep2");
+const surveyStep1NextBtn = document.getElementById("surveyStep1NextBtn");
+const surveyBackBtn = document.getElementById("surveyBackBtn");
+const surveyProgressBar = document.getElementById("surveyProgressBar");
 
 const userMenuBtn = document.getElementById("userMenuBtn");
 const userDropdown = document.getElementById("userDropdown");
@@ -206,6 +264,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 const topicsModal = document.getElementById("topicsModal");
 const topicsManagerGrid = document.getElementById("topicsManagerGrid");
+const topicsProgressHeader = document.getElementById("topicsProgressHeader");
 const topicsCloseBtn = document.getElementById("topicsCloseBtn");
 const devResetSurveyBtn = document.getElementById("devResetSurveyBtn");
 
@@ -413,6 +472,8 @@ async function resetSurveyForDev() {
 
   // 4. Перерисовать всё
   userDropdown.classList.add("hidden");
+  renderSurveyTopicsGrid();
+  renderTopicsManager();
   updateSurveyUI();
   updateChatAvailability();
   openSurveyModal();
@@ -496,26 +557,72 @@ function normalizeTopicKeys(topicKeys = []) {
 function renderSurveyTopicsGrid() {
   topicsGrid.innerHTML = "";
 
-  const topicCatalog = getTopicCatalog();
+  const LEVEL_LABELS = { beginner: "Базовый", intermediate: "Средний" };
 
-  for (const topic of topicCatalog) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "topic-chip";
-    btn.dataset.topic = topic.key;
-    btn.textContent = topic.title;
+  for (const group of SURVEY_TOPIC_GROUPS) {
+    // Group header
+    const groupHeader = document.createElement("div");
+    groupHeader.className = "survey-group-header";
 
-    if (onboardingState.topics.includes(topic.key)) {
-      btn.classList.add("active");
+    const groupTitle = document.createElement("span");
+    groupTitle.className = "survey-group-title";
+    groupTitle.textContent = group.group;
+
+    const groupLevel = document.createElement("span");
+    groupLevel.className = `survey-group-level survey-group-level--${group.level}`;
+    groupLevel.textContent = LEVEL_LABELS[group.level] || group.level;
+
+    groupHeader.appendChild(groupTitle);
+    groupHeader.appendChild(groupLevel);
+    topicsGrid.appendChild(groupHeader);
+
+    // Topic checkboxes
+    for (const topic of group.topics) {
+      const isChecked = onboardingState.topics.includes(topic.key);
+
+      const label = document.createElement("label");
+      label.className = `survey-topic-item ${isChecked ? "checked" : ""}`;
+      label.dataset.topic = topic.key;
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "survey-topic-checkbox";
+      checkbox.checked = isChecked;
+      checkbox.dataset.topic = topic.key;
+
+      const checkmark = document.createElement("span");
+      checkmark.className = "survey-topic-checkmark";
+      checkmark.innerHTML = icons.checkSmall;
+
+      const textBlock = document.createElement("span");
+      textBlock.className = "survey-topic-text";
+
+      const titleEl = document.createElement("span");
+      titleEl.className = "survey-topic-title";
+      titleEl.textContent = topic.title;
+
+      const hintEl = document.createElement("span");
+      hintEl.className = "survey-topic-hint";
+      hintEl.textContent = topic.hint;
+
+      textBlock.appendChild(titleEl);
+      textBlock.appendChild(hintEl);
+
+      label.appendChild(checkbox);
+      label.appendChild(checkmark);
+      label.appendChild(textBlock);
+      topicsGrid.appendChild(label);
     }
-
-    topicsGrid.appendChild(btn);
   }
 }
 
 /* =========================
    TOPICS
 ========================= */
+
+// Stores slugs of individually completed roadmap items, e.g. "variables__hoisting"
+let roadmapItemsState = new Set();
+
 async function loadTopicsFromServer() {
   const data = await api("/topics");
 
@@ -543,18 +650,22 @@ async function loadTopicsFromServer() {
   }
 
   renderSurveyTopicsGrid();
+
+  // Load individual roadmap item completions
+  try {
+    const itemData = await api("/roadmap/items");
+    roadmapItemsState = new Set(Array.isArray(itemData.item_slugs) ? itemData.item_slugs : []);
+  } catch {
+    roadmapItemsState = new Set();
+  }
 }
 
 async function saveSurveyTopicsToServer(topicKeys) {
   const normalizedKeys = normalizeTopicKeys(topicKeys);
 
-  const payload = {
-    topic_keys: normalizedKeys
-  };
-
   const data = await api("/topics/me", {
     method: "PUT",
-    body: JSON.stringify(payload)
+    body: JSON.stringify({ topic_keys: normalizedKeys })
   });
 
   topicsState.learned = Array.isArray(data.learned_topic_keys)
@@ -564,10 +675,70 @@ async function saveSurveyTopicsToServer(topicKeys) {
   onboardingState.topics = [...topicsState.learned];
   saveOnboardingState();
 
+  // Sync chosen topics into roadmap item completions so the roadmap
+  // immediately reflects what the user selected in the survey
+  syncSurveyTopicsToRoadmap(normalizedKeys);
+
   renderSurveyTopicsGrid();
   renderTopicsManager();
 
   return data;
+}
+
+/**
+ * For each topic key chosen in the survey, mark all roadmap items
+ * belonging to nodes with that topicKey as learned in roadmapItemsState,
+ * then persist to the server.
+ */
+function syncSurveyTopicsToRoadmap(topicKeys) {
+  if (!topicKeys || topicKeys.length === 0) return;
+
+  const keySet = new Set(topicKeys);
+
+  // Inline roadmap definition (mirrors renderTopicsManager)
+  const roadmap = [
+    { nodeSlug: "intro",           topicKey: null,       items: ["Что такое JavaScript", "История JavaScript", "Версии JavaScript", "Как запускать JavaScript"] },
+    { nodeSlug: "variables",       topicKey: "variables", items: ["Объявление переменных", "Hoisting", "Правила именования", "Области видимости", "var / let / const"] },
+    { nodeSlug: "types",           topicKey: "variables", items: ["Примитивные типы", "Object", "typeof", "Встроенные объекты"] },
+    { nodeSlug: "type_conversion", topicKey: "operators", items: ["Явное преобразование", "Неявное преобразование", "Type Conversion vs Coercion"] },
+    { nodeSlug: "operators",       topicKey: "operators", items: ["Присваивание", "Сравнение", "Арифметика", "Логические операторы", "Условный оператор"] },
+    { nodeSlug: "equality",        topicKey: "operators", items: ["==", "===", "Object.is", "Алгоритмы сравнения"] },
+    { nodeSlug: "conditions",      topicKey: "conditions",items: ["if...else", "switch", "throw", "try / catch / finally", "Ошибки"] },
+    { nodeSlug: "loops",           topicKey: "loops",     items: ["for", "while", "do...while", "for...in", "for...of", "break / continue"] },
+    { nodeSlug: "functions",       topicKey: "functions", items: ["Параметры функций", "Arrow Functions", "IIFE", "arguments", "Default Params", "Rest", "Рекурсия", "Замыкания"] },
+    { nodeSlug: "strings",         topicKey: "strings",   items: ["Методы строк", "Шаблонные литералы", "RegExp основы"] },
+    { nodeSlug: "arrays",          topicKey: "arrays",    items: ["Методы массивов", "map / filter / reduce", "Spread / Rest", "Деструктуризация"] },
+    { nodeSlug: "objects",         topicKey: "objects",   items: ["Свойства и методы", "Деструктуризация", "Spread объектов", "Object.keys / values / entries"] },
+    { nodeSlug: "data_structures", topicKey: "objects",   items: ["JSON", "Map", "Set", "WeakMap / WeakSet"] },
+    { nodeSlug: "dom",             topicKey: "dom",        items: ["DOM", "querySelector", "createElement", "innerHTML", "classList"] },
+    { nodeSlug: "events",          topicKey: "events",    items: ["addEventListener", "Делегирование событий", "Event Bubbling", "preventDefault"] },
+    { nodeSlug: "strict",          topicKey: null,        items: ["Использование strict mode"] },
+    { nodeSlug: "this",            topicKey: "this",      items: ["В методах", "В функциях", "В обработчиках событий", "В arrow functions"] },
+    { nodeSlug: "modules",         topicKey: "modules",   items: ["CommonJS", "ES Modules"] },
+    { nodeSlug: "async",           topicKey: "async",     items: ["Event Loop", "setTimeout", "setInterval", "Callbacks", "Promises", "async / await"] },
+    { nodeSlug: "api",             topicKey: "api",        items: ["Fetch API", "XMLHTTPRequest", "Обработка ошибок"] },
+  ];
+
+  for (const node of roadmap) {
+    if (!node.topicKey || !keySet.has(node.topicKey)) continue;
+    for (const itemText of node.items) {
+      roadmapItemsState.add(makeItemSlug(node.nodeSlug, itemText));
+    }
+  }
+
+  // Persist updated roadmap state
+  scheduleRoadmapSave();
+}
+
+async function saveRoadmapItemsToServer() {
+  try {
+    await api("/roadmap/items", {
+      method: "PUT",
+      body: JSON.stringify({ item_slugs: [...roadmapItemsState] })
+    });
+  } catch (err) {
+    console.error("Не удалось сохранить прогресс:", err);
+  }
 }
 
 function openTopicsModal() {
@@ -579,243 +750,273 @@ function closeTopicsModal() {
   topicsModal.classList.add("hidden");
 }
 
+// Redraw line segments if window is resized while roadmap is open
+window.addEventListener("resize", () => {
+  if (topicsModal.classList.contains("hidden")) return;
+  const wrapper = topicsManagerGrid.querySelector(".roadmap-tree");
+  if (!wrapper) return;
+  const allNodeEls = [...wrapper.querySelectorAll(".roadmap-node")].map((el) => ({
+    el,
+    markerEl: el.querySelector(".roadmap-node-marker"),
+    allLearned: el.classList.contains("roadmap-node--learned")
+  }));
+  requestAnimationFrame(() => drawRoadmapLines(wrapper, allNodeEls));
+});
+
+function makeItemSlug(nodeSlug, itemText) {
+  // Create a stable slug: "variables__hoisting"
+  return `${nodeSlug}__${itemText.toLowerCase().replace(/[^a-zа-яё0-9]+/gi, "_").replace(/^_|_$/g, "")}`;
+}
+
 function renderTopicsManager() {
   topicsManagerGrid.innerHTML = "";
 
   const roadmap = [
-    {
-      title: "Введение в JavaScript",
-      level: "beginner",
-      items: [
-        "Что такое JavaScript",
-        "История JavaScript",
-        "Версии JavaScript",
-        "Как запускать JavaScript"
-      ]
-    },
-    {
-      title: "Переменные",
-      level: "beginner",
-      items: [
-        "Объявление переменных",
-        "Hoisting",
-        "Правила именования",
-        "Области видимости",
-        "var / let / const"
-      ]
-    },
-    {
-      title: "Типы данных",
-      level: "beginner",
-      items: [
-        "Примитивные типы",
-        "Object",
-        "typeof",
-        "Встроенные объекты"
-      ]
-    },
-    {
-      title: "Преобразование типов",
-      level: "beginner",
-      items: [
-        "Явное преобразование",
-        "Неявное преобразование",
-        "Type Conversion vs Coercion"
-      ]
-    },
-    {
-      title: "Структуры данных",
-      level: "intermediate",
-      items: [
-        "Структурированные данные",
-        "JSON",
-        "Map",
-        "Set",
-        "Массивы"
-      ]
-    },
-    {
-      title: "Сравнение значений",
-      level: "beginner",
-      items: [
-        "==",
-        "===",
-        "Object.is",
-        "Алгоритмы сравнения"
-      ]
-    },
-    {
-      title: "Циклы и итерации",
-      level: "beginner",
-      items: [
-        "for",
-        "while",
-        "do...while",
-        "for...in",
-        "for...of",
-        "break / continue"
-      ]
-    },
-    {
-      title: "Условные конструкции",
-      level: "beginner",
-      items: [
-        "if...else",
-        "switch",
-        "throw",
-        "try / catch / finally",
-        "Ошибки"
-      ]
-    },
-    {
-      title: "Операторы и выражения",
-      level: "beginner",
-      items: [
-        "Присваивание",
-        "Сравнение",
-        "Арифметика",
-        "Логические операторы",
-        "Условный оператор"
-      ]
-    },
-    {
-      title: "Функции",
-      level: "beginner",
-      items: [
-        "Параметры функций",
-        "Arrow Functions",
-        "IIFE",
-        "arguments",
-        "Default Params",
-        "Rest",
-        "Рекурсия",
-        "Замыкания"
-      ]
-    },
-    {
-      title: "DOM API",
-      level: "intermediate",
-      items: [
-        "DOM",
-        "События",
-        "Обработчики событий"
-      ]
-    },
-    {
-      title: "Strict Mode",
-      level: "intermediate",
-      items: [
-        "Использование strict mode"
-      ]
-    },
-    {
-      title: "Ключевое слово this",
-      level: "intermediate",
-      items: [
-        "В методах",
-        "В функциях",
-        "Самостоятельное использование",
-        "В обработчиках событий",
-        "В arrow functions"
-      ]
-    },
-    {
-      title: "Модули в JavaScript",
-      level: "intermediate",
-      items: [
-        "CommonJS",
-        "ES Modules"
-      ]
-    },
-    {
-      title: "Асинхронный JavaScript",
-      level: "intermediate",
-      items: [
-        "Event Loop",
-        "setTimeout",
-        "setInterval",
-        "Callbacks",
-        "Promises",
-        "async / await"
-      ]
-    },
-    {
-      title: "Работа с API",
-      level: "intermediate",
-      items: [
-        "Fetch API",
-        "XMLHTTPRequest"
-      ]
-    },
-    {
-      title: "Классы",
-      level: "advanced",
-      items: [
-        "Классы",
-        "Прототипное наследование",
-        "Object Prototype"
-      ]
-    },
-    {
-      title: "Итераторы и генераторы",
-      level: "advanced",
-      items: [
-        "Итераторы",
-        "Генераторы"
-      ]
-    },
-    {
-      title: "Управление памятью",
-      level: "advanced",
-      items: [
-        "Жизненный цикл памяти",
-        "Garbage Collection"
-      ]
-    },
-    {
-      title: "Инструменты разработчика",
-      level: "advanced",
-      items: [
-        "Отладка ошибок",
-        "Отладка утечек памяти",
-        "Анализ производительности"
-      ]
-    }
+    { nodeSlug: "intro",            title: "Введение в JavaScript",    level: "beginner",     topicKey: null,        items: ["Что такое JavaScript", "История JavaScript", "Версии JavaScript", "Как запускать JavaScript"] },
+    { nodeSlug: "variables",        title: "Переменные",               level: "beginner",     topicKey: "variables", items: ["Объявление переменных", "Hoisting", "Правила именования", "Области видимости", "var / let / const"] },
+    { nodeSlug: "types",            title: "Типы данных",              level: "beginner",     topicKey: "variables", items: ["Примитивные типы", "Object", "typeof", "Встроенные объекты"] },
+    { nodeSlug: "type_conversion",  title: "Преобразование типов",     level: "beginner",     topicKey: "operators", items: ["Явное преобразование", "Неявное преобразование", "Type Conversion vs Coercion"] },
+    { nodeSlug: "operators",        title: "Операторы и выражения",    level: "beginner",     topicKey: "operators", items: ["Присваивание", "Сравнение", "Арифметика", "Логические операторы", "Условный оператор"] },
+    { nodeSlug: "equality",         title: "Сравнение значений",       level: "beginner",     topicKey: "operators", items: ["==", "===", "Object.is", "Алгоритмы сравнения"] },
+    { nodeSlug: "conditions",       title: "Условные конструкции",     level: "beginner",     topicKey: "conditions",items: ["if...else", "switch", "throw", "try / catch / finally", "Ошибки"] },
+    { nodeSlug: "loops",            title: "Циклы и итерации",         level: "beginner",     topicKey: "loops",     items: ["for", "while", "do...while", "for...in", "for...of", "break / continue"] },
+    { nodeSlug: "functions",        title: "Функции",                  level: "beginner",     topicKey: "functions", items: ["Параметры функций", "Arrow Functions", "IIFE", "arguments", "Default Params", "Rest", "Рекурсия", "Замыкания"] },
+    { nodeSlug: "strings",          title: "Строки",                   level: "beginner",     topicKey: "strings",   items: ["Методы строк", "Шаблонные литералы", "RegExp основы"] },
+    { nodeSlug: "arrays",           title: "Массивы",                  level: "beginner",     topicKey: "arrays",    items: ["Методы массивов", "map / filter / reduce", "Spread / Rest", "Деструктуризация"] },
+    { nodeSlug: "objects",          title: "Объекты",                  level: "beginner",     topicKey: "objects",   items: ["Свойства и методы", "Деструктуризация", "Spread объектов", "Object.keys / values / entries"] },
+    { nodeSlug: "data_structures",  title: "Структуры данных",         level: "intermediate", topicKey: "objects",   items: ["JSON", "Map", "Set", "WeakMap / WeakSet"] },
+    { nodeSlug: "dom",              title: "DOM API",                  level: "intermediate", topicKey: "dom",       items: ["DOM", "querySelector", "createElement", "innerHTML", "classList"] },
+    { nodeSlug: "events",           title: "События",                  level: "intermediate", topicKey: "events",    items: ["addEventListener", "Делегирование событий", "Event Bubbling", "preventDefault"] },
+    { nodeSlug: "strict",           title: "Strict Mode",              level: "intermediate", topicKey: null,        items: ["Использование strict mode"] },
+    { nodeSlug: "this",             title: "Ключевое слово this",      level: "intermediate", topicKey: "this",      items: ["В методах", "В функциях", "В обработчиках событий", "В arrow functions"] },
+    { nodeSlug: "modules",          title: "Модули в JavaScript",      level: "intermediate", topicKey: "modules",   items: ["CommonJS", "ES Modules"] },
+    { nodeSlug: "async",            title: "Асинхронный JavaScript",   level: "intermediate", topicKey: "async",     items: ["Event Loop", "setTimeout", "setInterval", "Callbacks", "Promises", "async / await"] },
+    { nodeSlug: "api",              title: "Работа с API",             level: "intermediate", topicKey: "api",       items: ["Fetch API", "XMLHTTPRequest", "Обработка ошибок"] },
+    { nodeSlug: "classes",          title: "Классы",                   level: "advanced",     topicKey: null,        items: ["Классы", "Прототипное наследование", "Object Prototype"] },
+    { nodeSlug: "iterators",        title: "Итераторы и генераторы",   level: "advanced",     topicKey: null,        items: ["Итераторы", "Генераторы"] },
+    { nodeSlug: "memory",           title: "Управление памятью",       level: "advanced",     topicKey: null,        items: ["Жизненный цикл памяти", "Garbage Collection"] },
+    { nodeSlug: "devtools",         title: "Инструменты разработчика", level: "advanced",     topicKey: null,        items: ["Отладка ошибок", "Отладка утечек памяти", "Анализ производительности"] }
   ];
 
+  // ── Progress bar (rendered into the separate fixed header element) ──
+  const totalItems = roadmap.reduce((s, n) => s + n.items.length, 0);
+  const learnedItemsCount = roadmap.reduce((s, n) =>
+    s + n.items.filter((item) => roadmapItemsState.has(makeItemSlug(n.nodeSlug, item))).length, 0);
+  const progressPct = totalItems > 0 ? Math.round((learnedItemsCount / totalItems) * 100) : 0;
+
+  topicsProgressHeader.innerHTML = `
+    <div class="roadmap-progress-text">
+      <span class="roadmap-progress-label">Прогресс</span>
+      <span class="roadmap-progress-fraction">${learnedItemsCount} / ${totalItems} пунктов</span>
+    </div>
+    <div class="roadmap-progress-bar-wrap">
+      <div class="roadmap-progress-bar-fill" style="width: ${progressPct}%"></div>
+    </div>
+  `;
+
+  // ── Build node state array ──
+  const nodeStates = roadmap.map((section) => {
+    const allSlugs = section.items.map((item) => makeItemSlug(section.nodeSlug, item));
+    const learnedCount = allSlugs.filter((s) => roadmapItemsState.has(s)).length;
+    return {
+      allLearned: learnedCount === section.items.length,
+      someLearned: learnedCount > 0 && learnedCount < section.items.length
+    };
+  });
+
+  // ── Wrapper ──
   const wrapper = document.createElement("div");
   wrapper.className = "roadmap-tree";
 
+  // ── Draw line segments between nodes ──
+  // We'll insert them after nodes are in the DOM via requestAnimationFrame
+  const nodeEls = [];
+
   roadmap.forEach((section, index) => {
+    const { allLearned, someLearned } = nodeStates[index];
+
     const node = document.createElement("section");
-    node.className = `roadmap-node roadmap-node-${section.level}`;
+    node.className = [
+      "roadmap-node",
+      `roadmap-node-${section.level}`,
+      allLearned ? "roadmap-node--learned" : "",
+      someLearned ? "roadmap-node--partial" : ""
+    ].filter(Boolean).join(" ");
 
-    node.innerHTML = `
-      <div class="roadmap-node-marker">${index + 1}</div>
-      <div class="roadmap-node-card">
-        <div class="roadmap-node-top">
-          <h3>${escapeHtml(section.title)}</h3>
-          <span class="roadmap-level">${getRoadmapLevelLabel(section.level)}</span>
-        </div>
-        <div class="roadmap-items">
-          ${section.items.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
-        </div>
-      </div>
-    `;
+    // ── Marker: checkmark if all done, else just the number ──
+    const marker = document.createElement("div");
+    marker.className = "roadmap-node-marker";
+    if (allLearned) {
+      marker.innerHTML = icons.checkLarge;
+    } else {
+      marker.textContent = index + 1;
+    }
 
+    // ── Card ──
+    const card = document.createElement("div");
+    card.className = "roadmap-node-card";
+
+    const topRow = document.createElement("div");
+    topRow.className = "roadmap-node-top";
+
+    const titleEl = document.createElement("h3");
+    titleEl.textContent = section.title;
+    if (authUser) {
+      titleEl.classList.add("roadmap-node-title--clickable");
+      titleEl.title = allLearned ? "Снять все отметки" : "Отметить всё в этом блоке";
+      titleEl.addEventListener("click", () => toggleNodeAllItems(section.nodeSlug, section.items, allLearned));
+    }
+
+    const levelBadge = document.createElement("span");
+    levelBadge.className = "roadmap-level";
+    levelBadge.textContent = getRoadmapLevelLabel(section.level);
+
+    topRow.appendChild(titleEl);
+    topRow.appendChild(levelBadge);
+
+    // ── Items ──
+    const itemsDiv = document.createElement("div");
+    itemsDiv.className = "roadmap-items";
+    section.items.forEach((itemText) => {
+      const slug = makeItemSlug(section.nodeSlug, itemText);
+      const isItemLearned = roadmapItemsState.has(slug);
+      const span = document.createElement("span");
+      span.textContent = itemText;
+      if (isItemLearned) span.classList.add("roadmap-item--learned");
+      if (authUser) {
+        span.classList.add("roadmap-item--clickable");
+        span.title = isItemLearned ? "Снять отметку" : "Отметить как изученное";
+        span.addEventListener("click", () => toggleSingleItem(slug, span, section.nodeSlug, section.items, node, marker, index));
+      }
+      itemsDiv.appendChild(span);
+    });
+
+    card.appendChild(topRow);
+    card.appendChild(itemsDiv);
+    node.appendChild(marker);
+    node.appendChild(card);
     wrapper.appendChild(node);
+    nodeEls.push({ el: node, markerEl: marker, allLearned });
   });
 
   topicsManagerGrid.appendChild(wrapper);
+
+  // ── Draw line segments after layout ──
+  requestAnimationFrame(() => drawRoadmapLines(wrapper, nodeEls));
+}
+
+function drawRoadmapLines(wrapper, nodeEls) {
+  // Remove old segments
+  wrapper.querySelectorAll(".roadmap-line-segment").forEach((el) => el.remove());
+
+  const wrapperRect = wrapper.getBoundingClientRect();
+
+  for (let i = 0; i < nodeEls.length - 1; i++) {
+    const fromMarker = nodeEls[i].markerEl;
+    const toMarker   = nodeEls[i + 1].markerEl;
+
+    const fromRect = fromMarker.getBoundingClientRect();
+    const toRect   = toMarker.getBoundingClientRect();
+
+    // Segment starts at the bottom edge of the current marker
+    const segTop = fromRect.bottom - wrapperRect.top;
+
+    // If current node is learned → green line that reaches INTO the next marker
+    // (to toRect.bottom). If next node is not yet learned, stop at toRect.top.
+    const currentLearned = nodeEls[i].allLearned;
+    const nextLearned    = nodeEls[i + 1].allLearned;
+
+    const segBottom = currentLearned && nextLearned
+      ? toRect.bottom - wrapperRect.top   // fully through the next circle
+      : currentLearned
+        ? toRect.bottom - wrapperRect.top // still draw through — visually cleaner
+        : toRect.top - wrapperRect.top;   // stop before the next circle
+
+    const segHeight = segBottom - segTop;
+    if (segHeight <= 0) continue;
+
+    const seg = document.createElement("div");
+    seg.className = `roadmap-line-segment ${currentLearned ? "roadmap-line-segment--learned" : "roadmap-line-segment--default"}`;
+    seg.style.top    = `${segTop}px`;
+    seg.style.height = `${segHeight}px`;
+    wrapper.appendChild(seg);
+  }
+}
+
+let roadmapSaveTimer = null;
+
+function scheduleRoadmapSave() {
+  clearTimeout(roadmapSaveTimer);
+  roadmapSaveTimer = setTimeout(() => saveRoadmapItemsToServer(), 800);
+}
+
+function toggleSingleItem(slug, spanEl, nodeSlug, nodeItems, nodeEl, markerEl, nodeIndex) {
+  if (roadmapItemsState.has(slug)) {
+    roadmapItemsState.delete(slug);
+    spanEl.classList.remove("roadmap-item--learned");
+    spanEl.title = "Отметить как изученное";
+  } else {
+    roadmapItemsState.add(slug);
+    spanEl.classList.add("roadmap-item--learned");
+    spanEl.title = "Снять отметку";
+  }
+
+  const allSlugs = nodeItems.map((t) => makeItemSlug(nodeSlug, t));
+  const learnedCount = allSlugs.filter((s) => roadmapItemsState.has(s)).length;
+  const allLearned = learnedCount === nodeItems.length;
+  const someLearned = learnedCount > 0 && !allLearned;
+
+  nodeEl.classList.toggle("roadmap-node--learned", allLearned);
+  nodeEl.classList.toggle("roadmap-node--partial", someLearned);
+
+  if (allLearned) {
+    markerEl.innerHTML = icons.checkLarge;
+  } else {
+    markerEl.textContent = nodeIndex + 1;
+  }
+
+  // Redraw lines
+  const wrapper = nodeEl.closest(".roadmap-tree");
+  if (wrapper) {
+    const allNodeEls = [...wrapper.querySelectorAll(".roadmap-node")].map((el) => ({
+      el,
+      markerEl: el.querySelector(".roadmap-node-marker"),
+      allLearned: el.classList.contains("roadmap-node--learned")
+    }));
+    requestAnimationFrame(() => drawRoadmapLines(wrapper, allNodeEls));
+  }
+
+  updateRoadmapProgressHeader();
+  scheduleRoadmapSave();
+}
+
+function toggleNodeAllItems(nodeSlug, nodeItems, currentlyAllLearned) {
+  const allSlugs = nodeItems.map((t) => makeItemSlug(nodeSlug, t));
+  if (currentlyAllLearned) {
+    allSlugs.forEach((s) => roadmapItemsState.delete(s));
+  } else {
+    allSlugs.forEach((s) => roadmapItemsState.add(s));
+  }
+  renderTopicsManager();
+  scheduleRoadmapSave();
+}
+
+function updateRoadmapProgressHeader() {
+  const fracEl = topicsProgressHeader.querySelector(".roadmap-progress-fraction");
+  const fillEl = topicsProgressHeader.querySelector(".roadmap-progress-bar-fill");
+  if (!fracEl || !fillEl) return;
+
+  const allSpans = topicsManagerGrid.querySelectorAll(".roadmap-items span");
+  const total = allSpans.length;
+  const learned = topicsManagerGrid.querySelectorAll(".roadmap-items .roadmap-item--learned").length;
+  const pct = total > 0 ? Math.round((learned / total) * 100) : 0;
+
+  fracEl.textContent = `${learned} / ${total} пунктов`;
+  fillEl.style.width = `${pct}%`;
 }
 
 function getRoadmapLevelLabel(level) {
-  const labels = {
-    beginner: "Начальный",
-    intermediate: "Средний",
-    advanced: "Продвинутый"
-  };
-
+  const labels = { beginner: "Начальный", intermediate: "Средний", advanced: "Продвинутый" };
   return labels[level] || "Тема";
 }
 
@@ -857,6 +1058,7 @@ async function logout() {
   } finally {
     chats = {};
     currentChatId = null;
+    roadmapItemsState = new Set();
     topicsState = { all: sortTopicsByLearningOrder([...FALLBACK_TOPICS]), learned: [] };
     onboardingState = {
       completed: false,
@@ -1323,6 +1525,25 @@ window.addEventListener("scroll", () => {
   userDropdown.classList.add("hidden");
 }, true);
 
+// Flush any pending roadmap save immediately when the tab is closed/hidden
+// so progress isn't lost if the user closes within the 800ms debounce window
+window.addEventListener("beforeunload", () => {
+  if (roadmapSaveTimer !== null && authUser) {
+    clearTimeout(roadmapSaveTimer);
+    roadmapSaveTimer = null;
+    const payload = JSON.stringify({ item_slugs: [...roadmapItemsState] });
+    navigator.sendBeacon("/roadmap/items", new Blob([payload], { type: "application/json" }));
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && roadmapSaveTimer !== null && authUser) {
+    clearTimeout(roadmapSaveTimer);
+    roadmapSaveTimer = null;
+    saveRoadmapItemsToServer();
+  }
+});
+
 renameCloseBtn.addEventListener("click", closeRenameModal);
 renameCancelBtn.addEventListener("click", closeRenameModal);
 
@@ -1580,58 +1801,96 @@ form.addEventListener("submit", async (e) => {
 /* =========================
    ONBOARDING / SURVEY
 ========================= */
+
+// Step 1: level selection
 levelBeginnerBtn.addEventListener("click", () => {
   onboardingState.level = "beginner";
-  onboardingState.topics = [];
-  updateSurveyUI();
+  levelBeginnerBtn.classList.add("active");
+  levelReturningBtn.classList.remove("active");
+  surveyStep1NextBtn.disabled = false;
 });
 
 levelReturningBtn.addEventListener("click", () => {
   onboardingState.level = "returning";
-  onboardingState.topics = normalizeTopicKeys(onboardingState.topics);
-  updateSurveyUI();
+  levelReturningBtn.classList.add("active");
+  levelBeginnerBtn.classList.remove("active");
+  surveyStep1NextBtn.disabled = false;
 });
 
-topicsGrid.addEventListener("click", (e) => {
-  const chip = e.target.closest(".topic-chip");
-  if (!chip) return;
-
-  const topic = chip.dataset.topic;
-  if (!topic) return;
-
-  const exists = onboardingState.topics.includes(topic);
-
-  if (exists) {
-    onboardingState.topics = onboardingState.topics.filter((item) => item !== topic);
-  } else {
-    onboardingState.topics.push(topic);
-  }
-
-  onboardingState.topics = normalizeTopicKeys(onboardingState.topics);
-  updateSurveyUI();
-});
-
-surveyContinueBtn.addEventListener("click", async () => {
+// Step 1 → Step 2
+surveyStep1NextBtn.addEventListener("click", () => {
   if (!onboardingState.level) return;
 
-  onboardingState.completed = true;
-  onboardingState.topics = onboardingState.level === "returning"
-    ? normalizeTopicKeys(onboardingState.topics)
-    : [];
+  // Both levels go to step 2 — beginners start with nothing checked,
+  // returning users check what they already know
+  const step2Title = surveyStep2.querySelector("h2");
+  const step2Subtitle = surveyStep2.querySelector(".survey-subtitle");
 
+  if (onboardingState.level === "beginner") {
+    if (step2Title) step2Title.textContent = "Что планируете изучить?";
+    if (step2Subtitle) step2Subtitle.textContent = "Отметьте темы, которые хотите пройти. Это обновит ваш прогресс в дорожной карте.";
+    // Clear pre-selected topics for fresh beginners
+    if (onboardingState.topics.length === 0) {
+      onboardingState.topics = [];
+    }
+  } else {
+    if (step2Title) step2Title.textContent = "Какие темы вам уже знакомы?";
+    if (step2Subtitle) step2Subtitle.textContent = "Отметьте всё, что вы уже знаете. Это обновит ваш прогресс в дорожной карте.";
+  }
+
+  surveyStep1.classList.add("hidden");
+  surveyStep2.classList.remove("hidden");
+  surveyProgressBar.style.width = "100%";
+  renderSurveyTopicsGrid();
+});
+
+// Step 2 → Step 1 (back)
+surveyBackBtn.addEventListener("click", () => {
+  surveyStep2.classList.add("hidden");
+  surveyStep1.classList.remove("hidden");
+  surveyProgressBar.style.width = "50%";
+});
+
+// Topic checkbox toggle in survey
+topicsGrid.addEventListener("change", (e) => {
+  const checkbox = e.target.closest(".survey-topic-checkbox");
+  if (!checkbox) return;
+
+  const topic = checkbox.dataset.topic;
+  if (!topic) return;
+
+  const label = checkbox.closest(".survey-topic-item");
+
+  if (checkbox.checked) {
+    if (!onboardingState.topics.includes(topic)) {
+      onboardingState.topics.push(topic);
+    }
+    label?.classList.add("checked");
+  } else {
+    onboardingState.topics = onboardingState.topics.filter((k) => k !== topic);
+    label?.classList.remove("checked");
+  }
+});
+
+// Finish survey (step 2 continue)
+surveyContinueBtn.addEventListener("click", async () => {
+  finishSurvey(onboardingState.topics);
+});
+
+async function finishSurvey(selectedTopics) {
+  onboardingState.completed = true;
+  onboardingState.topics = normalizeTopicKeys(selectedTopics);
   saveOnboardingState();
 
   try {
     if (authUser) {
-      const selectedTopics =
-        onboardingState.level === "returning" ? [...onboardingState.topics] : [];
-
-      await saveSurveyTopicsToServer(selectedTopics);
+      await saveSurveyTopicsToServer(onboardingState.topics);
       localStorage.removeItem(DEV_FORCE_SURVEY_RESET_KEY);
     }
 
     closeSurveyModal();
     updateChatAvailability();
+    renderTopicsManager();
 
     if (authUser) {
       input.focus();
@@ -1639,7 +1898,7 @@ surveyContinueBtn.addEventListener("click", async () => {
   } catch (error) {
     alert(error.message || "Не удалось сохранить темы");
   }
-});
+}
 
 function canUseChat() {
   return Boolean(onboardingState.completed);
@@ -1659,22 +1918,17 @@ function closeSurveyModal() {
 }
 
 function updateSurveyUI() {
+  // Reset to step 1
+  surveyStep1.classList.remove("hidden");
+  surveyStep2.classList.add("hidden");
+  surveyProgressBar.style.width = "50%";
+
   const isBeginner = onboardingState.level === "beginner";
   const isReturning = onboardingState.level === "returning";
 
   levelBeginnerBtn.classList.toggle("active", isBeginner);
   levelReturningBtn.classList.toggle("active", isReturning);
-  topicsSection.classList.toggle("hidden", !isReturning);
-
-  renderSurveyTopicsGrid();
-
-  const topicButtons = topicsGrid.querySelectorAll(".topic-chip");
-  topicButtons.forEach((btn) => {
-    const topic = btn.dataset.topic;
-    btn.classList.toggle("active", onboardingState.topics.includes(topic));
-  });
-
-  surveyContinueBtn.disabled = !onboardingState.level;
+  surveyStep1NextBtn.disabled = !onboardingState.level;
 }
 
 function updateChatAvailability() {
