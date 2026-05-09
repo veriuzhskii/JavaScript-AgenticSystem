@@ -802,15 +802,15 @@ function renderTopicsManager() {
   const totalItems = roadmap.reduce((s, n) => s + n.items.length, 0);
   const learnedItemsCount = roadmap.reduce((s, n) =>
     s + n.items.filter((item) => roadmapItemsState.has(makeItemSlug(n.nodeSlug, item))).length, 0);
-  const progressPct = totalItems > 0 ? Math.round((learnedItemsCount / totalItems) * 100) : 0;
+  const progressPct = totalItems > 0 ? Math.ceil((learnedItemsCount / totalItems) * 100) : 0;
 
   topicsProgressHeader.innerHTML = `
     <div class="roadmap-progress-text">
       <span class="roadmap-progress-label">Прогресс</span>
-      <span class="roadmap-progress-fraction">${learnedItemsCount} / ${totalItems} пунктов</span>
+      <span class="roadmap-progress-fraction">${progressPct}%</span>
     </div>
     <div class="roadmap-progress-bar-wrap">
-      <div class="roadmap-progress-bar-fill" style="width: ${progressPct}%"></div>
+      <div class="roadmap-progress-bar-fill" style="width: ${progressPct}%" data-progress="${progressPct}"></div>
     </div>
   `;
 
