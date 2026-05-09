@@ -875,7 +875,6 @@ textarea {
 .survey-subtitle {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
   line-height: 1.5;
   font-size: 14px;
 }
@@ -976,7 +975,6 @@ textarea {
   padding: 12px 14px;
   border: 1.5px solid var(--border);
   border-radius: 14px;
-  padding: 14px 16px;
   cursor: pointer;
   background: var(--input-bg);
   transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
@@ -1424,23 +1422,12 @@ html[data-theme="light"] .auth-message.success {
   padding: 8px 0 18px;
 }
 
-.roadmap-tree::before {
-  content: "";
-  position: absolute;
-  top: 28px;
-  bottom: 85px;
-  left: 22px;
-  width: 4px;
-  background: var(--accent);
-  border-radius: 999px;
-}
-
 .roadmap-node {
   position: relative;
   display: grid;
   grid-template-columns: 48px 1fr;
   gap: 14px;
-  align-items: flex-start;
+  align-items: start;
 }
 
 .roadmap-node-marker {
@@ -1456,7 +1443,11 @@ html[data-theme="light"] .auth-message.success {
   align-items: center;
   justify-content: center;
   font-weight: 800;
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
   box-shadow: 0 8px 24px var(--shadow);
+  flex-shrink: 0;
 }
 
 .roadmap-node-card {
@@ -1525,6 +1516,146 @@ html[data-theme="light"] .auth-message.success {
   padding: 7px 10px;
   font-size: 13px;
   line-height: 1.2;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.roadmap-item--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.roadmap-item--clickable:hover {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  color: #22c55e !important;
+  transform: translateY(-1px);
+}
+
+.roadmap-item--learned {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.35) !important;
+  color: #22c55e !important;
+}
+
+.roadmap-item--learned.roadmap-item--clickable:hover {
+  background: rgba(127, 127, 127, 0.09) !important;
+  border-color: var(--border) !important;
+  color: var(--muted) !important;
+}
+
+/* Clickable title */
+.roadmap-node-title--clickable {
+  cursor: pointer;
+  transition: color 0.15s ease;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.roadmap-node-title--clickable:hover {
+  color: #22c55e;
+}
+
+/* Marker fraction (partial state) */
+.roadmap-marker-fraction {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Fully learned node */
+.roadmap-node--learned .roadmap-node-marker {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.roadmap-node--learned .roadmap-node-card {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.04);
+}
+
+/* Partially learned node — solid bg, green border, number stays */
+.roadmap-node--partial .roadmap-node-marker {
+  background: var(--panel);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.roadmap-node--partial .roadmap-node-card {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+/* Line segments between nodes */
+.roadmap-line-segment {
+  position: absolute;
+  left: 22px;
+  width: 4px;
+  border-radius: 2px;
+  z-index: 1;
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+.roadmap-line-segment--learned {
+  background: #22c55e;
+}
+
+.roadmap-line-segment--default {
+  background: var(--accent);
+}
+
+/* Remove old mark button (replaced by title click) */
+.roadmap-node-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.roadmap-mark-btn { display: none; }
+
+/* Progress header in roadmap */
+.roadmap-progress-header {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 28px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.roadmap-progress-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.roadmap-progress-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.roadmap-progress-fraction {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.roadmap-progress-bar-wrap {
+  height: 8px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.roadmap-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+  min-width: 0;
 }
 
 /* =========================================================
