@@ -1,8 +1,9 @@
 from collections.abc import AsyncGenerator
+from typing import Optional
 
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
-from sqlalchemy import ForeignKey, String, delete, select
+from sqlalchemy import Date, ForeignKey, Integer, String, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -29,7 +30,8 @@ class Base(DeclarativeBase):
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
-    pass
+    streak_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
+    last_streak_date: Mapped[Optional[str]] = mapped_column(Date, nullable=True, default=None)
 
 
 class Topic(Base):
