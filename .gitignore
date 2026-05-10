@@ -10,3 +10,5 @@ history/
 test.db
 testing/
 start_app.py
+agenticsystem.db
+.guardrails/

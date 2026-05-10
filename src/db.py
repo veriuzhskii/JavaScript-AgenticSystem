@@ -1,12 +1,13 @@
 from collections.abc import AsyncGenerator
+from typing import Optional
 
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
-from sqlalchemy import ForeignKey, String, delete, select
+from sqlalchemy import Date, ForeignKey, Integer, String, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+DATABASE_URL = "sqlite+aiosqlite:///./agenticsystem.db"
 
 TOPIC_DEFINITIONS = [
     {"key": "variables", "title": "Переменные и типы данных"},
@@ -30,7 +31,8 @@ class Base(DeclarativeBase):
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     """Модель пользователя (fastapi-users)"""
-    pass
+    streak_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
+    last_streak_date: Mapped[Optional[str]] = mapped_column(Date, nullable=True, default=None)
 
 
 class Topic(Base):
@@ -47,6 +49,14 @@ class UserTopic(Base):
 
     user_id = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
     topic_key: Mapped[str] = mapped_column(ForeignKey("topics.key", ondelete="CASCADE"), primary_key=True)
+
+
+class UserRoadmapItem(Base):
+    """Stores individual roadmap item completion, e.g. 'variables__hoisting'."""
+    __tablename__ = "user_roadmap_items"
+
+    user_id = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    item_slug: Mapped[str] = mapped_column(String(200), primary_key=True)
 
 
 engine = create_async_engine(DATABASE_URL, echo=False)
