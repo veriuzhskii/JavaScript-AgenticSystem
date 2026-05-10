@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from model import MultiAgentSystem
+from main import MultiAgentSystem
 from src.db import (
     Topic,
     User,

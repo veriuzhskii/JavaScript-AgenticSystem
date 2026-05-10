@@ -13,6 +13,7 @@ SECRET = secrets.token_urlsafe(32)
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+    """Базовые действия с экземляром пользователя"""
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 

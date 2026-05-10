@@ -29,10 +29,12 @@ class Base(DeclarativeBase):
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
+    """Модель пользователя (fastapi-users)"""
     pass
 
 
 class Topic(Base):
+    """Справочник тем для изучения"""
     __tablename__ = "topics"
 
     key: Mapped[str] = mapped_column(String(50), primary_key=True)
@@ -40,6 +42,7 @@ class Topic(Base):
 
 
 class UserTopic(Base):
+    """Связь many-to-many: пользователь — темы"""
     __tablename__ = "user_topics"
 
     user_id = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
@@ -51,11 +54,13 @@ async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
 async def create_db_and_tables() -> None:
+    """Создаёт все таблицы в БД, если они ещё не существуют."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def seed_topics() -> None:
+    """Заполняет таблицу topics новыми темами, пропуская уже существующие"""
     async with async_session_maker() as session:
         existing = await session.execute(select(Topic.key))
         existing_keys = set(existing.scalars().all())
@@ -68,9 +73,11 @@ async def seed_topics() -> None:
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Создаёт и возвращает асинхронную сессию SQLAlchemy"""
     async with async_session_maker() as session:
         yield session
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+    """Возвращает адаптер БД для fastapi-users на основе сессии"""
     yield SQLAlchemyUserDatabase(session, User)
