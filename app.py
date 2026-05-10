@@ -14,7 +14,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from main import MultiAgentSystem
+# from main import MultiAgentSystem
+from main import Agent
 from src.db import (
     Topic,
     User,
@@ -47,7 +48,8 @@ HISTORY_DIR = "history"
 DEFAULT_CHAT_TITLE = "Новый чат"
 
 try:
-    rag = MultiAgentSystem()
+    # rag = MultiAgentSystem()
+    rag = Agent()
 except Exception as e:
     print("RAG initiation failed", e)
     rag = None

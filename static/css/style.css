@@ -1,62 +1,62 @@
 /* =========================================================
-   ГЛОБАЛЬНЫЕ CSS-ПЕРЕМЕННЫЕ
+   ГЛОБАЛЬНЫЕ CSS-ПЕРЕМЕННЫЕ — СИНЯЯ ТЕМА
 ========================================================= */
 :root {
-  --accent: rgb(181, 140, 219);
-  --accent-hover: rgb(166, 124, 206);
-  --accent-soft: rgba(181, 140, 219, 0.14);
-  --auth-btn-bg: #6f5a96;
-  --auth-btn-bg-hover: #624f86;
+  --accent: rgb(59, 130, 246);
+  --accent-hover: rgb(37, 99, 235);
+  --accent-soft: rgba(59, 130, 246, 0.12);
+  --auth-btn-bg: #2563eb;
+  --auth-btn-bg-hover: #1d4ed8;
 }
 
 html[data-theme="light"] {
-  --bg: #f7f7fb;
-  --sidebar-bg: #f1f2f7;
+  --bg: #f8fafc;
+  --sidebar-bg: #f1f5f9;
   --panel: #ffffff;
-  --text: #111111;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --hover: #f0ebff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --hover: #f0f4fe;
   --assistant: transparent;
-  --user: #746cb3;
+  --user: #3b82f6;
   --user-text: #ffffff;
   --input-bg: #ffffff;
-  --shadow: rgba(0, 0, 0, 0.06);
-  --danger: #dc2626;
-  --overlay: rgba(17, 24, 39, 0.45);
+  --shadow: rgba(0, 0, 0, 0.05);
+  --danger: #ef4444;
+  --overlay: rgba(15, 23, 42, 0.4);
 
-  --main-scrollbar-thumb: rgba(0, 0, 0, 0.18);
-  --main-scrollbar-thumb-hover: rgba(0, 0, 0, 0.32);
-  --sidebar-scrollbar-thumb: rgba(0, 0, 0, 0.14);
-  --sidebar-scrollbar-thumb-hover: rgba(0, 0, 0, 0.26);
+  --main-scrollbar-thumb: rgba(0, 0, 0, 0.12);
+  --main-scrollbar-thumb-hover: rgba(0, 0, 0, 0.24);
+  --sidebar-scrollbar-thumb: rgba(0, 0, 0, 0.1);
+  --sidebar-scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
 
   color-scheme: light;
 }
 
 html[data-theme="dark"] {
-  --bg: #212121;
-  --sidebar-bg: #171717;
-  --panel: #212121;
-  --text: #ececec;
-  --muted: #a1a1aa;
-  --border: #343541;
-  --hover: #2a2b32;
+  --bg: #0f172a;
+  --sidebar-bg: #1e293b;
+  --panel: #1e293b;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #334155;
+  --hover: #334155;
   --assistant: transparent;
-  --user: #3a3a3a;
+  --user: #3b82f6;
   --user-text: #ffffff;
-  --input-bg: #2f2f2f;
-  --shadow: rgba(0, 0, 0, 0.22);
+  --input-bg: #0f172a;
+  --shadow: rgba(0, 0, 0, 0.3);
   --danger: #f87171;
-  --overlay: rgba(0, 0, 0, 0.55);
+  --overlay: rgba(0, 0, 0, 0.6);
 
-  --main-scrollbar-thumb: rgba(255, 255, 255, 0.18);
-  --main-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
-  --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.16);
-  --sidebar-scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+  --main-scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --main-scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+  --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --sidebar-scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
 
-  --accent-hover: rgb(194, 156, 227);
-  --auth-btn-bg: #5e4b80;
-  --auth-btn-bg-hover: #52416f;
+  --accent-hover: rgb(59, 130, 246);
+  --auth-btn-bg: #2563eb;
+  --auth-btn-bg-hover: #1d4ed8;
 
   color-scheme: dark;
 }
@@ -295,7 +295,7 @@ textarea {
 }
 
 .chat-context-menu-item.delete:hover {
-  background: rgba(220, 38, 38, 0.08);
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .chat-context-menu-item svg {
@@ -957,14 +957,14 @@ textarea {
 }
 
 .survey-group-level--beginner {
-  background: rgba(168, 96, 235, 0.12);
-  border: 1px solid rgba(181, 140, 219, 0.35);
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   color: var(--accent);
 }
 
 .survey-group-level--intermediate {
-  background: rgba(133, 81, 182, 0.25);
-  border: 1px solid rgba(181, 140, 219, 0.5);
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
   color: var(--accent);
 }
 
@@ -1488,18 +1488,18 @@ html[data-theme="light"] .auth-message.success {
 }
 
 .roadmap-node-beginner .roadmap-level {
-  background: rgba(168, 96, 235, 0.12);
-  border: 1px solid rgba(181, 140, 219, 0.35);
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .roadmap-node-intermediate .roadmap-level {
-  background: rgba(133, 81, 182, 0.5);
-  border: 1px solid rgba(181, 140, 219, 0.55);
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
 .roadmap-node-advanced .roadmap-level {
-  background: rgba(72, 20, 121, 0.8);
-  border: 1px solid rgba(181, 140, 219, 0.75);
+  background: rgba(29, 78, 216, 0.25);
+  border: 1px solid rgba(59, 130, 246, 0.5);
 }
 
 .roadmap-items {
