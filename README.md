@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Javascript Learning System
 This is a multi-agent system designed to help users learn JavaScript in an interactive, chatbot-like environment. The system consists of specialized AI agents that work together to provide explanations, correct code, and validate solutions. Whether you're a beginner or an experienced developer looking to refine your skills, this tool is here to assist you.
 # System Architecture
@@ -70,3 +71,16 @@ Open the link provided in the terminal to access the chat interface.
   localStorage.clear();
   location.reload();
   ```
+=======
+# Agentic System for JavaScript Learning #
+
+1. Clone this repository
+2. Install requirements.txt:
+```commandline
+pip install -r requirements.txt
+```
+3. Create a file `.env` with a token for `GROQ_API_KEY`. It should contain:
+```txt
+GROQ_API_KEY = gsk_*** #your full API-Token
+```
+>>>>>>> bf5a1d021648952724483ce0513b4d979165d956

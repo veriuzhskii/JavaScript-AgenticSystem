@@ -1,11 +1,19 @@
 .env
 chromenv/
+<<<<<<< HEAD
 venv/
+=======
+.venv/
+>>>>>>> bf5a1d021648952724483ce0513b4d979165d956
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+<<<<<<< HEAD
 chroma_data/
 history/
 agenticsystem.db
 .guardrails/
+=======
+chroma_data/
+>>>>>>> bf5a1d021648952724483ce0513b4d979165d956
